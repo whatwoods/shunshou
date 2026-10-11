@@ -1,0 +1,309 @@
+.image-kit {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 28px;
+  align-items: start;
+}
+.image-kit-stage {
+  min-width: 0;
+  min-height: 420px;
+  padding: 24px;
+  border-radius: 26px;
+  background: var(--stage-bg);
+  display: flex;
+  flex-direction: column;
+  animation: rise-in 0.35s var(--ease) backwards;
+}
+.image-kit-preview {
+  position: relative;
+  width: fit-content;
+  max-width: 100%;
+  margin: auto;
+  overflow: hidden;
+  border-radius: 10px;
+  /* 透明图片下面铺一层棋盘格 */
+  background: repeating-conic-gradient(rgba(128, 128, 128, 0.16) 0 25%, transparent 0 50%) 0 0 / 16px 16px;
+  box-shadow: 0 18px 40px -22px rgba(0, 0, 0, 0.45);
+}
+.image-kit-preview.is-crop {
+  touch-action: none;
+  cursor: crosshair;
+  user-select: none;
+}
+.image-kit-preview.is-crop img {
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+.image-kit-preview > img {
+  display: block;
+  max-width: 100%;
+  max-height: 560px;
+  object-fit: contain;
+}
+.image-kit-preview > img.is-vector {
+  width: min(360px, 100%);
+  height: auto;
+}
+.image-kit-crop {
+  position: absolute;
+  border: 1.5px solid #ffffff;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.25),
+    0 0 0 100vmax rgba(0, 0, 0, 0.48);
+  cursor: move;
+  transition: box-shadow 0.2s ease;
+}
+/* 拖动时显示三分线，方便构图 */
+.image-kit-crop::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background:
+    linear-gradient(
+      90deg,
+      transparent calc(33.33% - 0.5px),
+      rgba(255, 255, 255, 0.55) 0 calc(33.33% + 0.5px),
+      transparent 0 calc(66.67% - 0.5px),
+      rgba(255, 255, 255, 0.55) 0 calc(66.67% + 0.5px),
+      transparent 0
+    ),
+    linear-gradient(
+      180deg,
+      transparent calc(33.33% - 0.5px),
+      rgba(255, 255, 255, 0.55) 0 calc(33.33% + 0.5px),
+      transparent 0 calc(66.67% - 0.5px),
+      rgba(255, 255, 255, 0.55) 0 calc(66.67% + 0.5px),
+      transparent 0
+    );
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+.is-dragging .image-kit-crop {
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.25),
+    0 0 0 100vmax rgba(0, 0, 0, 0.6);
+}
+.is-dragging .image-kit-crop::before {
+  opacity: 1;
+}
+/* 把手：四角是 L 形粗线，四边中间是短横条；实际可点范围比看到的大一圈，手指也好按 */
+.image-kit-handle {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  margin: -14px 0 0 -14px;
+  z-index: 1;
+}
+.image-kit-handle::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  background: #ffffff;
+  border-radius: 2px;
+  box-shadow:
+    0 0 0 0.5px rgba(0, 0, 0, 0.3),
+    0 1px 3px rgba(0, 0, 0, 0.35);
+}
+.image-kit-handle.is-nw {
+  left: 0;
+  top: 0;
+  cursor: nwse-resize;
+}
+.image-kit-handle.is-ne {
+  left: 100%;
+  top: 0;
+  cursor: nesw-resize;
+}
+.image-kit-handle.is-se {
+  left: 100%;
+  top: 100%;
+  cursor: nwse-resize;
+}
+.image-kit-handle.is-sw {
+  left: 0;
+  top: 100%;
+  cursor: nesw-resize;
+}
+.image-kit-handle.is-n {
+  left: 50%;
+  top: 0;
+  cursor: ns-resize;
+}
+.image-kit-handle.is-s {
+  left: 50%;
+  top: 100%;
+  cursor: ns-resize;
+}
+.image-kit-handle.is-e {
+  left: 100%;
+  top: 50%;
+  cursor: ew-resize;
+}
+.image-kit-handle.is-w {
+  left: 0;
+  top: 50%;
+  cursor: ew-resize;
+}
+.image-kit-handle:is(.is-n, .is-s)::after {
+  width: 22px;
+  height: 4px;
+  margin: -2px 0 0 -11px;
+}
+.image-kit-handle:is(.is-e, .is-w)::after {
+  width: 4px;
+  height: 22px;
+  margin: -11px 0 0 -2px;
+}
+/* 角：用两层渐变画成 L 形，开口朝框里 */
+.image-kit-handle:is(.is-nw, .is-ne, .is-se, .is-sw)::after {
+  width: 16px;
+  height: 16px;
+  background:
+    linear-gradient(#fff, #fff) var(--hx, left) var(--hy, top) / 16px 4px no-repeat,
+    linear-gradient(#fff, #fff) var(--hx, left) var(--hy, top) / 4px 16px no-repeat;
+  box-shadow: none;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
+}
+.image-kit-handle.is-nw::after {
+  margin: -2px 0 0 -2px;
+}
+.image-kit-handle.is-ne::after {
+  margin: -2px 0 0 -14px;
+  --hx: right;
+}
+.image-kit-handle.is-se::after {
+  margin: -14px 0 0 -14px;
+  --hx: right;
+  --hy: bottom;
+}
+.image-kit-handle.is-sw::after {
+  margin: -14px 0 0 -2px;
+  --hy: bottom;
+}
+.image-kit-caption {
+  margin: 14px 0 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.image-kit-side {
+  min-width: 0;
+}
+.image-kit-side > .group-title:first-child {
+  margin-top: 0;
+}
+.image-kit-list .image-kit-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding-right: 8px;
+  transition: background 0.15s ease;
+}
+.image-kit-row.is-sel {
+  background: var(--accent-tint);
+}
+.image-kit-file {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 8px 6px 8px 12px;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.image-kit-thumb {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: var(--surface-2);
+}
+.image-kit-file > span:not(.led) {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.image-kit-name {
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.image-kit-file small {
+  font-size: 12px;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.image-kit-meta {
+  margin-top: 20px;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--surface);
+}
+.image-kit-meta h3 {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+.image-kit-meta pre {
+  margin: 0;
+  max-height: 360px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: 12px/1.6 var(--mono);
+}
+.image-kit-error {
+  margin: 14px 0 0;
+  color: var(--danger);
+  font-size: 14px;
+}
+.image-kit-original {
+  margin-top: 22px;
+  text-align: center;
+}
+.image-kit-original p {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.image-kit-original img {
+  display: inline-block;
+  max-width: 100%;
+  max-height: 180px;
+}
+@media (max-width: 860px) {
+  .image-kit {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  .image-kit-stage {
+    min-height: 260px;
+    padding: 16px;
+    border-radius: 22px;
+  }
+  .image-kit-preview > img {
+    max-height: 380px;
+  }
+  .image-kit-side > .group-title:first-child {
+    margin-top: 24px;
+  }
+}
+
+/* 动图只处理第一帧的提醒 */
+.image-kit-warn {
+  margin: 12px 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--warning);
+}

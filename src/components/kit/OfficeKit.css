@@ -1,0 +1,404 @@
+.office-kit {
+  display: grid;
+  gap: 22px;
+  min-width: 0;
+}
+.office-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+}
+.office-kit textarea,
+.office-kit input:not([type='checkbox']):not([type='color']) {
+  background: var(--surface);
+  color: var(--ink);
+  border: 0;
+  box-shadow: 0 0 0 0.5px var(--hairline);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font: inherit;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 40px;
+}
+.office-kit input:not([type='checkbox']):not([type='color']):not([type='range']) {
+  min-height: 38px;
+  border-radius: 11px;
+  background: var(--track);
+  box-shadow: none;
+}
+.office-kit button:not(.switch-row) {
+  min-height: 36px;
+}
+.office-note {
+  color: var(--ink-2);
+  font-size: 13px;
+}
+.office-error {
+  color: var(--danger);
+}
+.office-result {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-family: var(--mono);
+}
+.office-kit pre {
+  overflow: auto;
+  max-width: 100%;
+  background: var(--field);
+  padding: 12px;
+  border-radius: 12px;
+}
+.office-kit table {
+  border-collapse: collapse;
+  max-width: 100%;
+}
+.office-kit td,
+.office-kit th {
+  padding: 8px;
+  border: 1px solid var(--divider);
+}
+.office-diff ins {
+  background: color-mix(in srgb, var(--success) 16%, transparent);
+  color: var(--success);
+  text-decoration: none;
+}
+.office-diff del {
+  background: color-mix(in srgb, var(--danger) 16%, transparent);
+  color: var(--danger);
+}
+.office-diff {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-family: var(--mono);
+  line-height: 1.7;
+}
+.office-preview {
+  line-height: 1.8;
+  overflow: auto;
+}
+.office-preview img {
+  max-width: 100%;
+}
+.office-preview a {
+  color: var(--accent);
+}
+.office-preview .hljs-keyword,
+.office-preview .hljs-attr {
+  color: var(--code-key);
+}
+.office-preview .hljs-string {
+  color: var(--code-str);
+}
+.office-preview .hljs-number {
+  color: var(--code-num);
+}
+.office-preview .hljs-comment {
+  color: var(--ink-3);
+}
+.office-qr {
+  display: block;
+  width: min(100%, 320px);
+  height: auto;
+  border-radius: 12px;
+}
+.office-kit input,
+.office-kit select {
+  box-sizing: border-box;
+}
+.office-kit label:not(.field-row) {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+}
+
+/* ———— 文字工具版式：主区 + 设置栏（TextLayout / TextBox / SideGroup） ———— */
+.tw {
+  display: grid;
+  gap: 28px;
+  align-items: start;
+  min-width: 0;
+}
+.tw.has-side {
+  grid-template-columns: minmax(0, 1fr) 320px;
+}
+.tw-main {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  container-type: inline-size;
+}
+/* 原文和结果并排；单独一张卡片时占满 */
+.tw-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: stretch;
+}
+.tw-side {
+  min-width: 0;
+}
+.tw-side > .group-title:first-child {
+  margin-top: 0;
+}
+.tw-side .group-note + .group-title {
+  margin-top: 20px;
+}
+.tw-box {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border-radius: 20px;
+  background: var(--surface);
+  transition: box-shadow 0.15s ease;
+}
+.tw-box:focus-within {
+  box-shadow: 0 0 0 2px var(--accent-tint-2);
+}
+.tw-box-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 52px;
+  padding: 8px 10px 0 18px;
+}
+.tw-box-head > h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.tw-box-head > label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.tw-box-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: 0;
+}
+.tw-box-actions .example-btn {
+  height: 32px;
+}
+.office-kit .tw-box textarea {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 340px;
+  margin: 0;
+  padding: 8px 18px 18px;
+  border: 0;
+  border-radius: 0 0 20px 20px;
+  background: transparent;
+  box-shadow: none;
+  color: var(--ink);
+  font: 14px/1.7 var(--mono);
+  resize: vertical;
+  box-sizing: border-box;
+  outline: none;
+}
+.tw-box-foot {
+  padding: 0 18px 14px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.tw-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 24px;
+}
+.tw-status > p {
+  margin: 0;
+}
+@media (max-width: 1100px) {
+  .tw.has-side {
+    grid-template-columns: minmax(0, 1fr) 280px;
+    gap: 20px;
+  }
+}
+@media (max-width: 900px) {
+  .tw.has-side {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .tw-side > .group-title:first-child {
+    margin-top: 10px;
+  }
+}
+/* 按主区自己的宽度决定并排还是上下排：两张卡片各不到 370px 时标题行放不下按钮 */
+@container (max-width: 760px) {
+  .tw-pair {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 640px) {
+  .office-kit .tw-box textarea {
+    min-height: 200px;
+  }
+}
+.choice-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 46px;
+  padding: 0 16px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 15px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.choice-row:hover {
+  background: var(--accent-tint);
+}
+.choice-row > span {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.choice-row small {
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.choice-row > svg {
+  flex: 0 0 auto;
+  color: var(--accent);
+}
+.tw-panel-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 340px;
+  padding: 8px 18px 18px;
+  overflow: auto;
+}
+@media (max-width: 640px) {
+  .tw-panel-body {
+    min-height: 200px;
+  }
+}
+.office-diff-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 20px;
+}
+.office-diff-row.is-stack {
+  grid-template-columns: minmax(0, 1fr);
+}
+.tw-panel .office-result {
+  font-size: 15px;
+  line-height: 1.9;
+}
+/* 单位换算：两行“数值 + 单位”，中间一个等号 */
+.unit-conv {
+  display: grid;
+  gap: 10px;
+  max-width: 640px;
+  padding-top: 12px;
+}
+.unit-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(140px, 220px);
+  gap: 12px;
+  align-items: center;
+}
+.office-kit .unit-line input.unit-value,
+.unit-line output.unit-value {
+  min-height: 64px;
+  padding: 0 16px;
+  border-radius: 14px;
+  background: var(--track);
+  font-size: clamp(24px, 3.2vw, 34px);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.unit-line output.unit-value {
+  display: flex;
+  align-items: center;
+  background: var(--accent-tint);
+}
+.unit-line .picker {
+  max-width: none;
+}
+.unit-eq {
+  padding-left: 16px;
+  font-size: 22px;
+  color: var(--ink-3);
+}
+/* 字数统计：设置栏里的统计行，数字右对齐、等宽 */
+.stat-row strong {
+  font-size: 17px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.stat-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 0 4px;
+}
+.tw:not(.has-side) .tw-main > .tw-box textarea,
+.tw-main > .tw-box:only-of-type textarea {
+  min-height: 420px;
+}
+/* 二维码：预览居中；识别模式里的原图 */
+.qr-stage {
+  display: grid;
+  place-items: center;
+  min-height: 300px;
+  padding-top: 8px;
+}
+.qr-stage .office-qr {
+  width: min(100%, 300px);
+  box-shadow: 0 0 0 0.5px var(--hairline);
+}
+.qr-stage img.qr-scan {
+  max-width: 100%;
+  max-height: 340px;
+  border-radius: 12px;
+  object-fit: contain;
+}
+.tw-panel .group {
+  margin: 4px -18px -10px;
+  border-radius: 0;
+  background: transparent;
+}
+.tw-mode {
+  justify-self: start;
+}
+.qr-logo-name {
+  display: block;
+  max-width: 120px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.qr-logo-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.office-kit .tw-box textarea.is-prose {
+  font: 15px/1.8 var(--font);
+}
+@container (max-width: 520px) {
+  .unit-line {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+}

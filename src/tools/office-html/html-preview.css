@@ -1,0 +1,100 @@
+.html-split {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 16px;
+  align-items: stretch;
+}
+@container (max-width: 760px) {
+  .html-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.html-panel .tw-panel-body {
+  padding: 4px 8px 8px;
+}
+.office-kit .tw-box textarea.html-code {
+  min-height: 520px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  white-space: pre;
+  tab-size: 2;
+}
+.html-stage-meta {
+  flex: 0 1 auto;
+  margin-right: 4px;
+  white-space: nowrap;
+  color: var(--ink-3);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+.html-stage {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 520px;
+  padding: 18px;
+  border-radius: 14px;
+  background: var(--stage-bg);
+  overflow: hidden;
+}
+.html-stage:fullscreen {
+  align-items: center;
+  border-radius: 0;
+  overflow: auto;
+}
+.html-device {
+  position: relative;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow:
+    0 0 0 0.5px rgba(0, 0, 0, 0.18),
+    0 22px 48px -26px rgba(0, 0, 0, 0.5);
+  animation: rise-in 0.3s var(--ease) backwards;
+}
+.html-stage.is-phone .html-device {
+  border-radius: 30px;
+  box-shadow:
+    0 0 0 6px #1d1d1f,
+    0 26px 56px -24px rgba(0, 0, 0, 0.55);
+  margin: 6px;
+}
+.html-stage.is-tablet .html-device {
+  border-radius: 20px;
+  box-shadow:
+    0 0 0 6px #1d1d1f,
+    0 26px 56px -24px rgba(0, 0, 0, 0.55);
+  margin: 6px;
+}
+.html-device iframe {
+  display: block;
+  border: 0;
+  background: #ffffff;
+}
+.html-empty {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  align-self: center;
+  margin: auto;
+  padding: 0 12px;
+  text-align: center;
+  color: var(--ink-3);
+  font-size: 14px;
+}
+.html-empty p {
+  margin: 0;
+}
+.html-empty .example-btn {
+  justify-self: center;
+}
+@media (max-width: 960px) {
+  .office-kit .tw-box textarea.html-code {
+    min-height: 260px;
+  }
+  .html-stage {
+    min-height: 300px;
+    padding: 12px;
+  }
+}

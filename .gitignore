@@ -1,0 +1,10 @@
+node_modules
+dist
+.wrangler
+.DS_Store
+.npm-cache
+.npm-lock
+*.tsbuildinfo
+.env*
+# 宣传片的中间产物；成片复制到 docs/media/
+promo/out/

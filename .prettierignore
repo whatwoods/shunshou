@@ -1,0 +1,5 @@
+# 这两个文件是手写的紧凑格式（一条规则一行），保持原样
+src/styles.css
+src/tools/image-compress/image-compress.css
+dist
+node_modules

@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>顺手 · 合并 PDF（E）</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#F5F4F1}
+a{color:#1F4FD1;text-decoration:none}a:hover{text-decoration:underline}
+:focus-visible{outline:2px solid #1F4FD1;outline-offset:3px}
+.navl{color:#1D1D1F;opacity:.85;transition:opacity .2s ease}
+.navl:hover{opacity:1;text-decoration:none}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.seg{cursor:pointer;transition:background .25s ease, box-shadow .25s ease}
+.ghost{cursor:pointer;transition:background .15s ease}
+.ghost:hover{background:rgba(0,0,0,0.05)}
+@media (prefers-reduced-transparency: reduce){.lg{background:rgba(250,250,248,0.96) !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important}}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #F5F4F1; color: #1D1D1F; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC', 'Noto Sans SC', 'Hiragino Sans GB', system-ui, sans-serif; font-size: 15px; line-height: 1.47; -webkit-font-smoothing: antialiased;">
+
+  <!-- 液态玻璃折射：位移图尺寸与导航、底部工具栏一一对应 -->
+  <svg aria-hidden="true" width="0" height="0" style="position: absolute; width: 0; height: 0; overflow: hidden;">
+    <defs>
+      <filter id="lgNav" x="0" y="0" width="432" height="52" filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+        <feImage href="/_blob/a48e1857b03944d8dc928349690d12ba" x="0" y="0" width="432" height="52" preserveAspectRatio="none" result="map"></feImage>
+        <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" edgeMode="duplicate" result="soft"></feGaussianBlur>
+        <feDisplacementMap in="soft" in2="map" scale="17.9" xChannelSelector="R" yChannelSelector="G"></feDisplacementMap>
+      </filter>
+      <filter id="lgTool" x="0" y="0" width="560" height="60" filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+        <feImage href="/_blob/90784a9132f913d4e2509b80b351c3b3" x="0" y="0" width="560" height="60" preserveAspectRatio="none" result="map"></feImage>
+        <feGaussianBlur in="SourceGraphic" stdDeviation="2" edgeMode="duplicate" result="soft"></feGaussianBlur>
+        <feDisplacementMap in="soft" in2="map" scale="23.1" xChannelSelector="R" yChannelSelector="G"></feDisplacementMap>
+      </filter>
+    </defs>
+  </svg>
+
+  <div style="position: sticky; top: 12px; z-index: 20; display: flex; justify-content: center; padding: 0 16px; height: 0; overflow: visible;">
+    <header class="lg" style="flex: 0 0 auto; width: 432px; display: flex; align-items: center; justify-content: space-between; gap: 4px; height: 52px; box-sizing: border-box; padding: 0 8px 0 14px; border-radius: 999px; background: rgba(255,255,255,0.5); backdrop-filter: {{navFilter}}; -webkit-backdrop-filter: {{navFilter}}; box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.9), inset 0 0 0 0.5px rgba(255,255,255,0.6), inset 0 -0.5px 0 rgba(255,255,255,0.5), 0 0 0 0.5px rgba(0,0,0,0.06), 0 8px 28px rgba(0,0,0,0.08);">
+      <a href="FusionHome.dc.html" class="navl" style="display: flex; align-items: center; gap: 8px; padding: 0 10px 0 0;">
+        <span style="width: 26px; height: 26px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: linear-gradient(180deg, #3A68E4 0%, #1F4FD1 55%, #1A44B8 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.28), inset 0 -1px 0 rgba(0,0,0,0.18), 0 1px 2px rgba(20,50,140,0.3); color: #FFFFFF; font-size: 14px; font-weight: 600;">顺</span>
+        <span style="font-size: 15px; font-weight: 600; letter-spacing: 0.02em;">顺手</span>
+      </a>
+      <nav aria-label="主导航" style="display: flex; align-items: center;">
+        <a href="FusionHome.dc.html" class="navl" style="padding: 8px 12px; font-size: 13.5px;">全部工具</a>
+        <a href="FusionHome.dc.html" class="navl" style="padding: 8px 12px; font-size: 13.5px;">隐私</a>
+        <a href="FusionHome.dc.html" class="navl" style="padding: 8px 12px; font-size: 13.5px;">自行部署</a>
+      </nav>
+      <span aria-hidden="true" style="width: 0.5px; height: 18px; margin: 0 6px; background: rgba(0,0,0,0.15);"></span>
+      <a href="FusionCommandPalette.dc.html" aria-label="搜索工具" style="width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #1D1D1F;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+      </a>
+      <button type="button" aria-label="切换深色模式" style="width: 36px; height: 36px; border: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: transparent; color: #1D1D1F; cursor: pointer;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"></path></svg>
+      </button>
+    </header>
+  </div>
+
+  <div style="max-width: 1280px; margin: 0 auto; padding: 96px 32px 48px;">
+    <div style="display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap;">
+      <div style="flex: 1 1 auto; min-width: 0;">
+        <p style="margin: 0; font-size: 15px;"><a href="FusionHome.dc.html">PDF</a> <span style="color: #8A8884;">›</span></p>
+        <h1 style="margin: 2px 0 0; font-size: 40px; font-weight: 600; line-height: 1.1; letter-spacing: -0.01em;">合并 PDF</h1>
+        <p style="margin: 10px 0 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 17px; color: #6E6C68;">
+          PDF 和图片放在一起，拖动页面调好顺序，合成一份。
+          <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #45443F;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #22B35E; box-shadow: 0 0 5px rgba(34,179,94,0.8);"></span>0 B 上传</span>
+        </p>
+      </div>
+      <div role="group" aria-label="查看方式" style="display: flex; padding: 3px; border-radius: 999px; background: rgba(120,116,108,0.14);">
+        <sc-for list="{{views}}" as="v" hint-placeholder-count="2">
+          <button type="button" class="seg" onClick="{{v.pick}}" aria-pressed="{{v.pressed}}" style="height: 34px; padding: 0 16px; border: 0; border-radius: 999px; font: inherit; font-size: 14px; font-weight: {{v.weight}}; color: #1D1D1F; background: {{v.bg}}; box-shadow: {{v.shadow}};">{{v.label}}</button>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 24px; margin-top: 28px; align-items: flex-start; flex-wrap: wrap;">
+      <div style="position: relative; flex: 1 1 640px; min-width: 0; box-sizing: border-box; padding: 24px 24px 104px; border-radius: 26px; background: #FFFFFF;">
+        <sc-if value="{{byPage}}" hint-placeholder-val="{{ true }}">
+          <div role="list" aria-label="页面顺序" style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 22px 18px;">
+            <sc-for list="{{pages}}" as="p" hint-placeholder-count="10">
+              <div role="listitem" style="position: relative; display: flex; flex-direction: column; gap: 8px;">
+                <div style="position: relative; aspect-ratio: 1 / 1.414; border-radius: 6px; background: {{p.paper}}; box-shadow: {{p.paperShadow}}; outline: {{p.slot}}; outline-offset: -1px;">
+                  <sc-if value="{{p.isText}}" hint-placeholder-val="{{ true }}">
+                    <span aria-hidden="true" style="position: absolute; left: 12%; right: 40%; top: 9%; height: 6px; border-radius: 2px; background: rgba(29,29,31,0.55);"></span>
+                    <span aria-hidden="true" style="position: absolute; left: 12%; right: 12%; top: 17%; bottom: 14%; background: {{p.lines}};"></span>
+                  </sc-if>
+                  <sc-if value="{{p.isPhoto}}" hint-placeholder-val="{{ false }}">
+                    <span aria-hidden="true" style="position: absolute; left: 9%; right: 9%; top: 18%; bottom: 30%; border-radius: 2px; background: {{p.photo}};"></span>
+                  </sc-if>
+                  <sc-if value="{{p.isSlot}}" hint-placeholder-val="{{ false }}">
+                    <span style="position: absolute; inset: 0; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 16px; font-size: 12px; font-weight: 500; color: #1F4FD1;">松手放到这里</span>
+                    <div aria-label="正在拖动：报销单第 2 页" style="position: absolute; left: -26px; top: -20px; width: 100%; height: 100%; border-radius: 6px; transform: rotate(-4deg); background: #FFFFFF; box-shadow: 0 0 0 0.5px rgba(0,0,0,0.08), 0 24px 40px -12px rgba(0,0,0,0.35);">
+                      <span aria-hidden="true" style="position: absolute; left: 12%; right: 40%; top: 9%; height: 6px; border-radius: 2px; background: rgba(29,29,31,0.55);"></span>
+                      <span aria-hidden="true" style="position: absolute; left: 12%; right: 12%; top: 17%; bottom: 14%; background: repeating-linear-gradient(180deg, rgba(29,29,31,0.13) 0 3px, rgba(29,29,31,0) 3px 11px);"></span>
+                      <span style="position: absolute; right: -6px; top: -6px; padding: 1px 7px; border-radius: 999px; background: #1F4FD1; color: #FFFFFF; font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums;">→ 03</span>
+                    </div>
+                  </sc-if>
+                </div>
+                <span style="display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: {{p.labelColor}};">
+                  <span aria-hidden="true" style="width: 6px; height: 6px; border-radius: 50%; background: {{p.led}};"></span>
+                  <span style="font-variant-numeric: tabular-nums; color: #8A8884;">{{p.n}}</span>
+                  <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{p.label}}</span>
+                </span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{byFile}}" hint-placeholder-val="{{ false }}">
+          <div role="list" aria-label="文件顺序" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px 28px; padding-top: 10px;">
+            <sc-for list="{{docs}}" as="d" hint-placeholder-count="4">
+              <div role="listitem" style="display: flex; flex-direction: column; gap: 10px;">
+                <div style="position: relative; aspect-ratio: 1 / 1.414; margin: 0 14px 0 0;">
+                  <span aria-hidden="true" style="position: absolute; inset: 0; transform: translate(12px, 10px); border-radius: 6px; background: #FFFFFF; box-shadow: 0 0 0 0.5px rgba(0,0,0,0.08), 0 4px 10px rgba(0,0,0,0.06); opacity: {{d.stack}};"></span>
+                  <span aria-hidden="true" style="position: absolute; inset: 0; transform: translate(6px, 5px); border-radius: 6px; background: #FFFFFF; box-shadow: 0 0 0 0.5px rgba(0,0,0,0.08), 0 4px 10px rgba(0,0,0,0.06); opacity: {{d.stack}};"></span>
+                  <span aria-hidden="true" style="position: absolute; inset: 0; border-radius: 6px; background: #FFFFFF; box-shadow: 0 0 0 0.5px rgba(0,0,0,0.08), 0 6px 14px rgba(0,0,0,0.08);"><span style="position: absolute; left: 10%; right: 10%; top: 12%; bottom: 14%; background: {{d.face}};"></span></span>
+                </div>
+                <span style="display: flex; flex-direction: column; line-height: 1.35;">
+                  <span style="display: flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 600;"><span aria-hidden="true" style="width: 6px; height: 6px; border-radius: 50%; background: {{d.led}};"></span>{{d.name}}</span>
+                  <span style="font-size: 12.5px; color: #6E6C68; padding-left: 13px;">{{d.meta}}</span>
+                </span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <div class="lg" style="position: absolute; z-index: 2; left: 50%; bottom: 22px; transform: translateX(-50%); width: 560px; height: 60px; box-sizing: border-box; padding: 0 8px 0 22px; border-radius: 999px; display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.5); backdrop-filter: {{toolFilter}}; -webkit-backdrop-filter: {{toolFilter}}; box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.95), inset 0 0 0 0.5px rgba(255,255,255,0.6), inset 0 -0.5px 0 rgba(255,255,255,0.6), 0 0 0 0.5px rgba(0,0,0,0.06), 0 12px 30px rgba(0,0,0,0.16);">
+          <span style="flex: 1 1 auto; font-size: 14px; color: #1D1D1F;"><span style="font-weight: 600; font-variant-numeric: tabular-nums;">10 页</span><span style="color: #6E6C68;"> · 4 个来源</span></span>
+          <button type="button" class="ghost" style="display: flex; align-items: center; gap: 6px; height: 40px; padding: 0 12px; border: 0; border-radius: 999px; background: transparent; font: inherit; font-size: 14px; color: #1D1D1F;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"></path><path d="M4 9h10a6 6 0 0 1 0 12h-3"></path></svg>撤销
+          </button>
+          <button type="button" class="ghost" style="height: 40px; padding: 0 12px; border: 0; border-radius: 999px; background: transparent; font: inherit; font-size: 14px; color: #1D1D1F;">按文件名排序</button>
+          <button type="button" style="display: flex; align-items: center; gap: 6px; height: 44px; padding: 0 20px; border: 0; border-radius: 999px; cursor: pointer; font: inherit; font-size: 14px; font-weight: 600; color: #FFFFFF; background: linear-gradient(180deg, #3A68E4 0%, #1F4FD1 55%, #1A44B8 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.28), inset 0 -1px 0 rgba(0,0,0,0.18), 0 1px 2px rgba(20,50,140,0.25), 0 6px 14px -6px rgba(31,79,209,0.55);">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"></path><path d="M7 10l5 5 5-5"></path><path d="M5 20h14"></path></svg>
+            合并并下载
+          </button>
+        </div>
+      </div>
+
+      <aside style="flex: 0 0 360px; max-width: 100%; display: flex; flex-direction: column;">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; padding: 0 16px 8px;">
+          <h2 style="margin: 0; font-size: 13px; font-weight: 400; color: #6E6C68;">来源文件</h2>
+          <button type="button" style="border: 0; padding: 0; background: none; cursor: pointer; font: inherit; font-size: 13px; color: #1F4FD1;">添加</button>
+        </div>
+        <div style="border-radius: 20px; background: #FFFFFF; overflow: hidden;">
+          <sc-for list="{{docs}}" as="d" hint-placeholder-count="4">
+            <div style="display: flex; align-items: center; gap: 12px; height: 56px; padding: 0 14px 0 16px; box-shadow: {{d.rule}};">
+              <span aria-hidden="true" style="width: 7px; height: 7px; border-radius: 50%; background: {{d.led}};"></span>
+              <span style="flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; line-height: 1.3;">
+                <span style="font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{d.name}}</span>
+                <span style="font-size: 12.5px; color: #6E6C68;">{{d.meta}}</span>
+              </span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B5B3AE" stroke-width="2" stroke-linecap="round" aria-label="拖动调整顺序" role="img"><path d="M5 9h14"></path><path d="M5 15h14"></path></svg>
+            </div>
+          </sc-for>
+        </div>
+
+        <h2 style="margin: 24px 0 8px; padding: 0 16px; font-size: 13px; font-weight: 400; color: #6E6C68;">输出</h2>
+        <div style="border-radius: 20px; background: #FFFFFF; overflow: hidden;">
+          <div style="display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 16px; box-shadow: inset 0 -0.5px 0 rgba(60,58,54,0.2);">
+            <label for="outname" style="flex: 0 0 auto; font-size: 15px;">文件名</label>
+            <input id="outname" type="text" value="{{outName}}" onChange="{{onName}}" style="flex: 1 1 auto; min-width: 0; border: 0; outline: none; background: transparent; font: inherit; font-size: 15px; color: #1D1D1F; text-align: right;">
+            <span style="font-size: 15px; color: #8A8884;">.pdf</span>
+          </div>
+          <button type="button" role="switch" aria-checked="{{a4Checked}}" onClick="{{toggleA4}}" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 52px; padding: 8px 16px; border: 0; background: transparent; cursor: pointer; font: inherit; font-size: 15px; color: #1D1D1F; text-align: left; box-shadow: inset 0 -0.5px 0 rgba(60,58,54,0.2);">
+            图片页按 A4 排版，自动留白
+            <span style="flex: 0 0 auto; width: 51px; height: 31px; box-sizing: border-box; padding: 2px; border-radius: 999px; display: flex; justify-content: {{a4Align}}; background: {{a4Track}}; transition: background .25s ease;"><span style="width: 27px; height: 27px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 3px 8px rgba(0,0,0,0.15), 0 0 0 0.5px rgba(0,0,0,0.04);"></span></span>
+          </button>
+          <button type="button" role="switch" aria-checked="{{bmChecked}}" onClick="{{toggleBm}}" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 52px; padding: 8px 16px; border: 0; background: transparent; cursor: pointer; font: inherit; font-size: 15px; color: #1D1D1F; text-align: left;">
+            保留原文件的书签
+            <span style="flex: 0 0 auto; width: 51px; height: 31px; box-sizing: border-box; padding: 2px; border-radius: 999px; display: flex; justify-content: {{bmAlign}}; background: {{bmTrack}}; transition: background .25s ease;"><span style="width: 27px; height: 27px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 3px 8px rgba(0,0,0,0.15), 0 0 0 0.5px rgba(0,0,0,0.04);"></span></span>
+          </button>
+        </div>
+        <p style="margin: 8px 0 0; padding: 0 16px; font-size: 13px; line-height: 1.4; color: #6E6C68;">合并在浏览器里完成，大约 2.3 MB。</p>
+      </aside>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  state = { view: 'page', a4: true, bookmarks: false, name: '报销材料-10月' };
+
+  // 真折射依赖 backdrop-filter: url(#svg滤镜)，目前只有 Chromium 支持；其他浏览器退回普通模糊
+  refractOK() {
+    const ua = (typeof navigator !== 'undefined' && navigator.userAgent) || '';
+    return /Chrome\/\d+/.test(ua) && !/Firefox\//.test(ua);
+  }
+
+  renderVals() {
+    const s = this.state || {};
+    const view = s.view || 'page';
+    const a4 = s.a4 !== false;
+    const bm = !!s.bookmarks;
+
+    // 每个来源一个 LED 颜色（A 留下的痕迹）
+    const A = '#F5A524', B = '#3B82F6', P = '#22B35E';
+    const TEXT = 'repeating-linear-gradient(180deg, rgba(29,29,31,0.13) 0 3px, rgba(29,29,31,0) 3px 11px)';
+    const TABLE = 'linear-gradient(rgba(29,29,31,0.08), rgba(29,29,31,0.08)) 0 0 / 100% 18% no-repeat, repeating-linear-gradient(180deg, rgba(29,29,31,0.12) 0 1px, rgba(29,29,31,0) 1px 14px)';
+    const PHOTO = 'radial-gradient(120% 55% at 28% 100%, #4E6B5A 0 50%, rgba(78,107,90,0) 51%), linear-gradient(180deg, #C7D6DF 0%, #E6ECEE 100%)';
+    const page = (led, n, label, kind) => ({
+      led, n, label,
+      isText: kind !== 'photo' && kind !== 'slot',
+      isPhoto: kind === 'photo',
+      isSlot: kind === 'slot',
+      lines: kind === 'table' ? TABLE : TEXT,
+      photo: PHOTO,
+      paper: kind === 'slot' ? 'rgba(31,79,209,0.05)' : '#FFFFFF',
+      paperShadow: kind === 'slot' ? 'none' : '0 0 0 0.5px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.06)',
+      slot: kind === 'slot' ? '1.5px dashed #1F4FD1' : 'none',
+      labelColor: kind === 'slot' ? '#1F4FD1' : '#1D1D1F'
+    });
+    const pages = [
+      page(A, '01', '报销单 · 1'),
+      page(P, '02', 'IMG_2048', 'photo'),
+      page('#1F4FD1', '03', '报销单 · 2', 'slot'),
+      page(A, '04', '报销单 · 3'),
+      page(A, '05', '报销单 · 4'),
+      page(A, '06', '报销单 · 5'),
+      page(B, '07', '发票 · 1', 'table'),
+      page(B, '08', '发票 · 2', 'table'),
+      page(P, '09', 'IMG_2051', 'photo'),
+      page(A, '10', '报销单 · 6')
+    ];
+    const docsRaw = [
+      { name: '报销单.pdf', led: A, meta: '6 页 · 1.6 MB', face: TEXT, stack: '1' },
+      { name: '发票.pdf', led: B, meta: '2 页 · 420 KB', face: TABLE, stack: '1' },
+      { name: 'IMG_2048.HEIC', led: P, meta: '图片 → 1 页', face: PHOTO, stack: '0' },
+      { name: 'IMG_2051.HEIC', led: P, meta: '图片 → 1 页', face: PHOTO, stack: '0' }
+    ];
+    const docs = docsRaw.map((d, i) => ({ ...d, rule: i < docsRaw.length - 1 ? 'inset 0 -0.5px 0 rgba(60,58,54,0.2)' : 'none' }));
+
+    const views = [{ id: 'file', label: '按文件' }, { id: 'page', label: '按页面' }].map((v) => {
+      const on = v.id === view;
+      return {
+        ...v,
+        pressed: on ? 'true' : 'false',
+        weight: on ? '600' : '400',
+        bg: on ? '#FFFFFF' : 'transparent',
+        shadow: on ? '0 3px 8px rgba(0,0,0,0.12), 0 0 0 0.5px rgba(0,0,0,0.04)' : 'none',
+        pick: () => this.setState({ view: v.id })
+      };
+    });
+
+    const lg = this.refractOK();
+    return {
+      pages,
+      docs,
+      views,
+      byPage: view === 'page',
+      byFile: view === 'file',
+      outName: s.name ?? '报销材料-10月',
+      onName: (e) => this.setState({ name: e.target.value }),
+      a4Checked: a4 ? 'true' : 'false',
+      a4Align: a4 ? 'flex-end' : 'flex-start',
+      a4Track: a4 ? '#34C759' : 'rgba(120,116,108,0.18)',
+      toggleA4: () => this.setState({ a4: !a4 }),
+      bmChecked: bm ? 'true' : 'false',
+      bmAlign: bm ? 'flex-end' : 'flex-start',
+      bmTrack: bm ? '#34C759' : 'rgba(120,116,108,0.18)',
+      toggleBm: () => this.setState({ bookmarks: !bm }),
+      navFilter: lg ? 'url(#lgNav) saturate(160%) brightness(1.04)' : 'blur(16px) saturate(180%)',
+      toolFilter: lg ? 'url(#lgTool) saturate(150%) brightness(1.05)' : 'blur(12px) saturate(170%)'
+    };
+  }
+}
+</script>
+</body>
+</html>

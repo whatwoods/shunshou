@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>顺手 · JSON 格式化（E）</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#F5F4F1}
+a{color:#1F4FD1;text-decoration:none}a:hover{text-decoration:underline}
+:focus-visible{outline:2px solid #1F4FD1;outline-offset:3px}
+.navl{color:#1D1D1F;opacity:.85;transition:opacity .2s ease}
+.navl:hover{opacity:1;text-decoration:none}
+.seg{cursor:pointer;transition:background .25s ease, box-shadow .25s ease}
+@media (prefers-reduced-transparency: reduce){.lg{background:rgba(250,250,248,0.96) !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important}}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #F5F4F1; color: #1D1D1F; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC', 'Noto Sans SC', 'Hiragino Sans GB', system-ui, sans-serif; font-size: 15px; line-height: 1.47; -webkit-font-smoothing: antialiased;">
+
+  <!-- 液态玻璃折射：位移图尺寸与导航、状态标签一一对应 -->
+  <svg aria-hidden="true" width="0" height="0" style="position: absolute; width: 0; height: 0; overflow: hidden;">
+    <defs>
+      <filter id="lgNav" x="0" y="0" width="432" height="52" filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+        <feImage href="/_blob/a48e1857b03944d8dc928349690d12ba" x="0" y="0" width="432" height="52" preserveAspectRatio="none" result="map"></feImage>
+        <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" edgeMode="duplicate" result="soft"></feGaussianBlur>
+        <feDisplacementMap in="soft" in2="map" scale="17.9" xChannelSelector="R" yChannelSelector="G"></feDisplacementMap>
+      </filter>
+      <filter id="lgTag" x="0" y="0" width="300" height="40" filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+        <feImage href="/_blob/e2715bda2cd738845d1f4ac0f233a6cd" x="0" y="0" width="300" height="40" preserveAspectRatio="none" result="map"></feImage>
+        <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" edgeMode="duplicate" result="soft"></feGaussianBlur>
+        <feDisplacementMap in="soft" in2="map" scale="12.7" xChannelSelector="R" yChannelSelector="G"></feDisplacementMap>
+      </filter>
+    </defs>
+  </svg>
+
+  <div style="position: sticky; top: 12px; z-index: 20; display: flex; justify-content: center; padding: 0 16px; height: 0; overflow: visible;">
+    <header class="lg" style="flex: 0 0 auto; width: 432px; display: flex; align-items: center; justify-content: space-between; gap: 4px; height: 52px; box-sizing: border-box; padding: 0 8px 0 14px; border-radius: 999px; background: rgba(255,255,255,0.5); backdrop-filter: {{navFilter}}; -webkit-backdrop-filter: {{navFilter}}; box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.9), inset 0 0 0 0.5px rgba(255,255,255,0.6), inset 0 -0.5px 0 rgba(255,255,255,0.5), 0 0 0 0.5px rgba(0,0,0,0.06), 0 8px 28px rgba(0,0,0,0.08);">
+      <a href="FusionHome.dc.html" class="navl" style="display: flex; align-items: center; gap: 8px; padding: 0 10px 0 0;">
+        <span style="width: 26px; height: 26px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: linear-gradient(180deg, #3A68E4 0%, #1F4FD1 55%, #1A44B8 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.28), inset 0 -1px 0 rgba(0,0,0,0.18), 0 1px 2px rgba(20,50,140,0.3); color: #FFFFFF; font-size: 14px; font-weight: 600;">顺</span>
+        <span style="font-size: 15px; font-weight: 600; letter-spacing: 0.02em;">顺手</span>
+      </a>
+      <nav aria-label="主导航" style="display: flex; align-items: center;">
+        <a href="FusionHome.dc.html" class="navl" style="padding: 8px 12px; font-size: 13.5px;">全部工具</a>
+        <a href="FusionHome.dc.html" class="navl" style="padding: 8px 12px; font-size: 13.5px;">隐私</a>
+        <a href="FusionHome.dc.html" class="navl" style="padding: 8px 12px; font-size: 13.5px;">自行部署</a>
+      </nav>
+      <span aria-hidden="true" style="width: 0.5px; height: 18px; margin: 0 6px; background: rgba(0,0,0,0.15);"></span>
+      <a href="FusionCommandPalette.dc.html" aria-label="搜索工具" style="width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #1D1D1F;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+      </a>
+      <button type="button" aria-label="切换深色模式" style="width: 36px; height: 36px; border: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: transparent; color: #1D1D1F; cursor: pointer;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"></path></svg>
+      </button>
+    </header>
+  </div>
+
+  <div style="max-width: 1280px; margin: 0 auto; padding: 96px 32px 40px;">
+    <p style="margin: 0; font-size: 15px;"><a href="FusionHome.dc.html">开发编码</a> <span style="color: #8A8884;">›</span></p>
+    <h1 style="margin: 2px 0 0; font-size: 40px; font-weight: 600; line-height: 1.1; letter-spacing: -0.01em;">JSON 格式化</h1>
+    <p style="margin: 10px 0 0; font-size: 17px; color: #6E6C68;">粘贴进来就自动校验、美化。接口返回、配置文件都放心贴，内容不会离开这个页面。</p>
+
+    <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 26px;">
+      <div role="group" aria-label="输出方式" style="display: flex; padding: 3px; border-radius: 999px; background: rgba(120,116,108,0.14);">
+        <sc-for list="{{modes}}" as="m" hint-placeholder-count="2">
+          <button type="button" class="seg" onClick="{{m.pick}}" aria-pressed="{{m.pressed}}" style="height: 34px; padding: 0 16px; border: 0; border-radius: 999px; font: inherit; font-size: 14px; font-weight: {{m.weight}}; color: #1D1D1F; background: {{m.bg}}; box-shadow: {{m.shadow}};">{{m.label}}</button>
+        </sc-for>
+      </div>
+      <div role="group" aria-label="缩进" style="display: flex; padding: 3px; border-radius: 999px; background: rgba(120,116,108,0.14);">
+        <sc-for list="{{indents}}" as="o" hint-placeholder-count="3">
+          <button type="button" class="seg" onClick="{{o.pick}}" aria-pressed="{{o.pressed}}" style="height: 34px; padding: 0 14px; border: 0; border-radius: 999px; font: inherit; font-size: 14px; font-weight: {{o.weight}}; color: #1D1D1F; background: {{o.bg}}; box-shadow: {{o.shadow}};">{{o.label}}</button>
+        </sc-for>
+      </div>
+      <button type="button" role="switch" aria-checked="{{sortChecked}}" onClick="{{toggleSort}}" style="display: flex; align-items: center; gap: 10px; padding: 0 4px; border: 0; background: none; cursor: pointer; font: inherit; font-size: 14px; color: #1D1D1F;">
+        <span style="width: 51px; height: 31px; box-sizing: border-box; padding: 2px; border-radius: 999px; display: flex; justify-content: {{sortAlign}}; background: {{sortTrack}}; transition: background .25s ease;"><span style="width: 27px; height: 27px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 3px 8px rgba(0,0,0,0.15), 0 0 0 0.5px rgba(0,0,0,0.04);"></span></span>
+        按键名排序
+      </button>
+      <span style="flex: 1 1 auto;"></span>
+      <button type="button" style="display: flex; align-items: center; gap: 6px; height: 40px; padding: 0 16px 0 13px; border: 0; border-radius: 999px; cursor: pointer; font: inherit; font-size: 15px; color: #1D1D1F; background: rgba(120,116,108,0.12);">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2.5"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg>
+        复制
+      </button>
+      <button type="button" style="display: flex; align-items: center; gap: 6px; height: 40px; padding: 0 18px 0 14px; border: 0; border-radius: 999px; cursor: pointer; font: inherit; font-size: 15px; font-weight: 600; color: #FFFFFF; background: linear-gradient(180deg, #3A68E4 0%, #1F4FD1 55%, #1A44B8 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.28), inset 0 -1px 0 rgba(0,0,0,0.18), 0 1px 2px rgba(20,50,140,0.25), 0 6px 14px -6px rgba(31,79,209,0.55);">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"></path><path d="M7 10l5 5 5-5"></path><path d="M5 20h14"></path></svg>
+        下载 .json
+      </button>
+    </div>
+
+    <div style="display: flex; gap: 20px; margin-top: 18px; flex-wrap: wrap;">
+      <section aria-label="输入" style="flex: 1 1 420px; min-width: 0; height: 540px; box-sizing: border-box; display: flex; flex-direction: column; border-radius: 22px; background: #FFFFFF; overflow: hidden;">
+        <div style="flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; height: 48px; padding: 0 18px; box-shadow: inset 0 -0.5px 0 rgba(60,58,54,0.18);">
+          <h2 style="margin: 0; font-size: 13px; font-weight: 600; color: #45443F;">输入</h2>
+          <button type="button" style="border: 0; padding: 0; background: none; cursor: pointer; font: inherit; font-size: 13px; color: #1F4FD1;">从剪贴板读取</button>
+        </div>
+        <div style="flex: 1 1 auto; padding: 16px 18px; font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 13.5px; line-height: 1.75; color: #1D1D1F; white-space: pre-wrap; word-break: break-all;">{{inBefore}}<mark style="padding: 1px 2px; border-radius: 3px; color: inherit; background: {{errBg}}; box-shadow: {{errRing}};">{{inMark}}</mark>{{inAfter}}</div>
+        <sc-if value="{{isError}}" hint-placeholder-val="{{ false }}">
+          <div role="alert" style="flex: 0 0 auto; display: flex; align-items: center; gap: 10px; margin: 0 12px 12px; padding: 12px 14px; border-radius: 14px; background: rgba(240,68,46,0.08); font-size: 14px;">
+            <span aria-hidden="true" style="width: 7px; height: 7px; border-radius: 50%; background: #F0442E; box-shadow: 0 0 6px rgba(240,68,46,0.8);"></span>
+            <span style="flex: 1 1 auto;"><span style="font-weight: 600;">第 1 行第 52 列</span> · <code style="font-family: ui-monospace, 'SF Mono', Menlo, monospace;">true</code> 后面少了一个逗号</span>
+            <button type="button" style="border: 0; padding: 0; background: none; cursor: pointer; font: inherit; font-size: 14px; font-weight: 600; color: #1F4FD1;">帮我补上</button>
+          </div>
+        </sc-if>
+      </section>
+
+      <section aria-label="输出" style="position: relative; flex: 1 1 520px; min-width: 0; height: 540px; box-sizing: border-box; display: flex; flex-direction: column; border-radius: 22px; background: #FFFFFF; overflow: hidden;">
+        <div style="flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; height: 48px; padding: 0 18px; box-shadow: inset 0 -0.5px 0 rgba(60,58,54,0.18);">
+          <h2 style="margin: 0; font-size: 13px; font-weight: 600; color: #45443F;">输出</h2>
+          <span style="font-size: 13px; color: #6E6C68; font-variant-numeric: tabular-nums;">{{stats}}</span>
+        </div>
+        <sc-if value="{{isValid}}" hint-placeholder-val="{{ true }}">
+          <div style="flex: 1 1 auto; min-height: 0; overflow: hidden; padding: 14px 0; font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 13.5px; line-height: 1.7;">
+            <sc-for list="{{lines}}" as="l" hint-placeholder-count="12">
+              <div style="display: flex; white-space: {{wrap}};">
+                <span aria-hidden="true" style="flex: 0 0 auto; width: 44px; padding-right: 14px; box-sizing: border-box; text-align: right; color: #B5B3AE; user-select: none;">{{l.n}}</span>
+                <span style="min-width: 0; word-break: break-all;"><sc-for list="{{l.parts}}" as="p" hint-placeholder-count="4"><span style="color: {{p.c}};">{{p.t}}</span></sc-for></span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{isError}}" hint-placeholder-val="{{ false }}">
+          <div style="flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 24px; text-align: center;">
+            <p style="margin: 0; font-size: 19px; font-weight: 600;">差一点就能解析了</p>
+            <p style="margin: 0; max-width: 300px; font-size: 14px; color: #6E6C68;">修好左边标出来的那一处，格式化结果会马上出现在这里。</p>
+          </div>
+        </sc-if>
+
+        <div class="lg" role="status" style="position: absolute; right: 16px; bottom: 16px; width: 300px; height: 40px; box-sizing: border-box; padding: 0 16px; border-radius: 999px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; color: #1D1D1F; white-space: nowrap; background: rgba(255,255,255,0.5); backdrop-filter: {{tagFilter}}; -webkit-backdrop-filter: {{tagFilter}}; box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.95), inset 0 0 0 0.5px rgba(255,255,255,0.6), 0 0 0 0.5px rgba(0,0,0,0.06), 0 8px 22px rgba(0,0,0,0.14);">
+          <span aria-hidden="true" style="width: 7px; height: 7px; border-radius: 50%; background: {{statusLed}}; box-shadow: {{statusGlow}};"></span>
+          <span style="font-weight: 600;">{{statusText}}</span>
+          <span style="color: #6E6C68;">· {{statusNote}}</span>
+        </div>
+      </section>
+    </div>
+    <p style="margin: 14px 4px 0; font-size: 13px; color: #6E6C68;">解析在 Web Worker 里完成，几十 MB 的文件也不会卡住页面。</p>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"variant":{"editor":"enum","options":["valid","error"],"default":"valid"},"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  state = { mode: 'pretty', indent: '2', sort: false };
+
+  // 真折射依赖 backdrop-filter: url(#svg滤镜)，目前只有 Chromium 支持；其他浏览器退回普通模糊
+  refractOK() {
+    const ua = (typeof navigator !== 'undefined' && navigator.userAgent) || '';
+    return /Chrome\/\d+/.test(ua) && !/Firefox\//.test(ua);
+  }
+
+  sortKeys(v) {
+    if (Array.isArray(v)) return v.map((x) => this.sortKeys(x));
+    if (v && typeof v === 'object') {
+      const o = {};
+      Object.keys(v).sort().forEach((k) => { o[k] = this.sortKeys(v[k]); });
+      return o;
+    }
+    return v;
+  }
+
+  // 浅色底上的语法配色：键名用钴蓝，其余颜色都压到 4.5:1 以上
+  tokens(line) {
+    const KEY = '#1F4FD1', STR = '#1B7A36', NUM = '#A55400', LIT = '#7A3FD1', PUN = '#77746F';
+    const out = [];
+    const re = /("(?:[^"\\]|\\.)*")(\s*:)?|(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)|(true|false|null)|([{}\[\],])|(\s+)/g;
+    let m;
+    while ((m = re.exec(line))) {
+      if (m[1] && m[2]) { out.push({ t: m[1], c: KEY }); out.push({ t: m[2] + ' ', c: PUN }); }
+      else if (m[1]) out.push({ t: m[1], c: STR });
+      else if (m[3]) out.push({ t: m[3], c: NUM });
+      else if (m[4]) out.push({ t: m[4], c: LIT });
+      else if (m[5]) out.push({ t: m[5], c: PUN });
+      else if (m[6]) out.push({ t: m[6], c: PUN });
+    }
+    return out;
+  }
+
+  renderVals() {
+    const s = this.state || {};
+    const mode = s.mode || 'pretty';
+    const indent = s.indent || '2';
+    const sort = !!s.sort;
+    const isError = (this.props.variant ?? 'valid') === 'error';
+
+    const raw = '{"name":"shunshou","version":"1.0.0","private":true,"scripts":{"dev":"vite","build":"vite build","deploy":"wrangler deploy"},"tools":[{"id":"image-compress","category":"image","wasm":true},{"id":"pdf-merge","category":"pdf","wasm":true},{"id":"json-format","category":"code","wasm":false}],"offline":true,"telemetry":null}';
+    const cut = raw.indexOf('"private":true,') + '"private":true'.length;
+    const inBefore = isError ? raw.slice(0, cut - 4) : raw;
+    const inMark = isError ? 'true ' : '';
+    const inAfter = isError ? raw.slice(cut + 1) : '';
+
+    let obj = JSON.parse(raw);
+    if (sort) obj = this.sortKeys(obj);
+    const space = indent === 'tab' ? '\t' : Number(indent);
+    const text = mode === 'min' ? JSON.stringify(obj) : JSON.stringify(obj, null, space);
+    const outLines = text.split('\n');
+    const lines = outLines.map((l, i) => ({ n: String(i + 1), parts: this.tokens(l.replace(/\t/g, '    ')) }));
+
+    const kb = (n) => (n / 1024).toFixed(1) + ' KB';
+    const enc = (str) => new TextEncoder().encode(str).length;
+
+    const seg = (list, cur, key) => list.map((o) => {
+      const on = o.id === cur;
+      return {
+        ...o,
+        pressed: on ? 'true' : 'false',
+        weight: on ? '600' : '400',
+        bg: on ? '#FFFFFF' : 'transparent',
+        shadow: on ? '0 3px 8px rgba(0,0,0,0.12), 0 0 0 0.5px rgba(0,0,0,0.04)' : 'none',
+        pick: () => this.setState({ [key]: o.id })
+      };
+    });
+
+    const lg = this.refractOK();
+    return {
+      isError,
+      isValid: !isError,
+      inBefore, inMark, inAfter,
+      errBg: isError ? 'rgba(240,68,46,0.14)' : 'transparent',
+      errRing: isError ? '0 0 0 1.5px #E2481F' : 'none',
+      lines,
+      wrap: mode === 'min' ? 'pre-wrap' : 'pre',
+      stats: isError ? '—' : outLines.length + ' 行',
+      statusText: isError ? '出错' : '有效',
+      statusNote: isError ? '第 1 行第 52 列' : kb(enc(raw)) + ' → ' + kb(enc(text)),
+      // A 留下的痕迹：校验结果用 LED 小灯表示
+      statusLed: isError ? '#F0442E' : '#22B35E',
+      statusGlow: isError ? '0 0 6px rgba(240,68,46,0.8)' : '0 0 6px rgba(34,179,94,0.8)',
+      modes: seg([{ id: 'pretty', label: '格式化' }, { id: 'min', label: '压缩成一行' }], mode, 'mode'),
+      indents: seg([{ id: '2', label: '2 空格' }, { id: '4', label: '4 空格' }, { id: 'tab', label: 'Tab' }], indent, 'indent'),
+      sortChecked: sort ? 'true' : 'false',
+      sortAlign: sort ? 'flex-end' : 'flex-start',
+      sortTrack: sort ? '#34C759' : 'rgba(120,116,108,0.18)',
+      toggleSort: () => this.setState({ sort: !sort }),
+      navFilter: lg ? 'url(#lgNav) saturate(160%) brightness(1.04)' : 'blur(16px) saturate(180%)',
+      tagFilter: lg ? 'url(#lgTag) saturate(150%) brightness(1.05)' : 'blur(10px) saturate(170%)'
+    };
+  }
+}
+</script>
+</body>
+</html>

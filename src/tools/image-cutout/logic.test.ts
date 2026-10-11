@@ -1,0 +1,42 @@
+import { describe, expect, it } from 'vitest';
+import { bounds, MODELS, toMask, toTensor } from './logic';
+
+describe('toTensor', () => {
+  it('按通道排成 NCHW 并归一化', () => {
+    const px = new Uint8ClampedArray([255, 0, 128, 255, 0, 255, 0, 255]);
+    const { mean, std } = MODELS.fine;
+    const t = toTensor(px, 1, mean, std);
+    expect(t.length).toBe(3);
+    expect(t[0]).toBeCloseTo(1 - 0.485);
+    expect(t[2]).toBeCloseTo(128 / 255 - 0.406);
+  });
+});
+
+describe('toMask', () => {
+  it('拉伸到 0–255', () => {
+    expect(Array.from(toMask(new Float32Array([2, 3, 4]), false))).toEqual([0, 128, 255]);
+  });
+  it('清理后背景的残影归零、主体变实心，中间保留半透明', () => {
+    const m = toMask(new Float32Array([0, 0.05, 0.5, 0.95, 1]), true);
+    expect(m[0]).toBe(0);
+    expect(m[1]).toBe(0);
+    expect(m[2]).toBe(128);
+    expect(m[3]).toBe(255);
+    expect(m[4]).toBe(255);
+  });
+  it('全是同一个值时不出 NaN', () => {
+    expect(Array.from(toMask(new Float32Array([0.3, 0.3]), true))).toEqual([0, 0]);
+  });
+});
+
+describe('bounds', () => {
+  it('找出不透明像素的外接框', () => {
+    const a = new Uint8Array(5 * 4);
+    a[1 * 5 + 2] = 200;
+    a[2 * 5 + 3] = 200;
+    expect(bounds((i) => a[i], 5, 4)).toEqual({ x: 2, y: 1, w: 2, h: 2 });
+  });
+  it('全透明时返回 null', () => {
+    expect(bounds(() => 0, 3, 3)).toBeNull();
+  });
+});

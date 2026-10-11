@@ -1,0 +1,50 @@
+/* 宣传片的外壳：舞台、播放条。舞台里面的样子都来自网站的 styles.css，这里只补宣传片自己的东西 */
+html, body { height: 100%; margin: 0; overflow: hidden; background: #0E0E0D; }
+.viewport { position: fixed; inset: 0 0 64px 0; display: flex; align-items: center; justify-content: center; }
+.viewport.is-render { inset: 0; }
+.film {
+  position: absolute; left: 0; top: 0; width: 1440px; height: 810px; overflow: hidden; transform-origin: 0 0;
+  background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 17px; line-height: 1.47; contain: strict;
+}
+/* 画面完全由时间算出来：网站自带的 CSS 动画和过渡一律关掉，不然逐帧导出时会跟着真实时间跑 */
+.film *, .film *::before, .film *::after { animation: none !important; transition: none !important; }
+.layer { position: absolute; inset: 0; overflow: hidden; color: var(--ink); }
+.layer.dark-scope { background: var(--bg); }
+
+/* 图标逐笔画出来（Draw 组件给每条线设了 pathLength=1） */
+.draw svg :is(path, rect, circle, line, polyline, ellipse):not([fill='currentColor']) { stroke-dasharray: 1 2; stroke-dashoffset: calc(1 - var(--draw)); }
+.draw svg [fill='currentColor'] { opacity: var(--draw); }
+
+/* 键帽：首页大卡片上那排、工具墙 */
+.p-key {
+  display: flex; align-items: center; justify-content: center; background: var(--surface); color: var(--ink);
+}
+.p-key .led { position: absolute; }
+
+/* 拖进来的照片 */
+.p-photo { overflow: hidden; background: var(--stage-bg); }
+.p-thumb { overflow: hidden; border: 4px solid #FFFFFF; box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.45), 0 0 0 0.5px rgba(0, 0, 0, 0.1); }
+
+/* 工具页的照片标签、对比线（和图片压缩页同一套尺寸） */
+.p-pill { display: flex; flex-direction: column; justify-content: center; padding: 0 18px; line-height: 1.3; color: var(--ink); }
+.p-pill small { font-size: 12px; color: var(--glass-ink-2); white-space: nowrap; }
+.p-pill b { font-size: 14px; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.p-line { position: absolute; top: 0; bottom: 0; width: 1px; margin-left: -0.5px; background: rgba(255, 255, 255, 0.9); box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.08); }
+
+/* 一页纸 */
+.p-page { background: #FFFFFF; border-radius: 6px; box-shadow: 0 0 0 1px var(--divider), 0 8px 20px -12px rgba(0, 0, 0, 0.35); overflow: hidden; }
+
+/* 手机 */
+.p-phone { background: #1B1B1D; box-shadow: 0 0 0 1.5px #3A3A3C, 0 40px 80px -30px rgba(0, 0, 0, 0.55), inset 0 0 0 1px #000; }
+.p-island { background: #000; border-radius: 999px; }
+
+/* ———— 播放条（只在预览时出现） ———— */
+.controls {
+  position: fixed; left: 0; right: 0; bottom: 0; height: 64px; display: flex; align-items: center; gap: 14px; padding: 0 18px;
+  background: #1A1A19; color: #DDD; font: 13px/1 -apple-system, BlinkMacSystemFont, sans-serif;
+}
+.controls button { height: 30px; padding: 0 12px; border: 0; border-radius: 8px; background: #2C2C2A; color: #EEE; font: inherit; cursor: pointer; }
+.controls button:hover { background: #3A3A37; }
+.controls input { flex: 1 1 auto; accent-color: #EC6A33; }
+.controls .time { width: 96px; font-variant-numeric: tabular-nums; color: #AAA; }
+.controls .chapters { display: flex; gap: 6px; }

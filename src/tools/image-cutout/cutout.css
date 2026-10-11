@@ -1,0 +1,67 @@
+/* 透明处是棋盘格；选了纯色背景或看原图时铺实底 */
+.cutout-preview.is-solid {
+  background: var(--surface);
+}
+.cutout-preview > img {
+  transition:
+    opacity 0.3s ease,
+    filter 0.3s ease;
+}
+.cutout-preview > img.is-working {
+  opacity: 0.55;
+  filter: saturate(0.6);
+}
+/* 处理中：一道光从上往下扫过，下面一行进度 */
+.cutout-busy {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 16px;
+  pointer-events: none;
+}
+.cutout-scan {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 30%;
+  background: linear-gradient(180deg, transparent, var(--accent-tint-2) 70%, color-mix(in srgb, var(--accent) 45%, transparent));
+  border-bottom: 1.5px solid var(--accent);
+  animation: cutout-scan 1.8s var(--ease) infinite;
+}
+@keyframes cutout-scan {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(340%);
+  }
+}
+.cutout-busy p {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: 0 6px 20px -8px rgba(0, 0, 0, 0.35);
+  font-size: 13px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.cutout-caption {
+  display: flex;
+  justify-content: center;
+  margin-top: 14px;
+}
+.cutout-caption .image-kit-caption {
+  margin: 0;
+}
+.image-kit-thumb.cutout-thumb {
+  object-fit: contain;
+  background: repeating-conic-gradient(rgba(128, 128, 128, 0.18) 0 25%, transparent 0 50%) 0 0 / 8px 8px;
+}

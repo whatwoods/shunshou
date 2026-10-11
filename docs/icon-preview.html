@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>工具图标</title>
+<!-- 开发服务器里打开 /docs/icon-preview.html，加 ?theme=dark 看深色。图标直接取自 src/components/ToolIcon.tsx，样式是网站真实的 styles.css -->
+<script>document.documentElement.dataset.theme = new URLSearchParams(location.search).get('theme') === 'dark' ? 'dark' : 'light';</script>
+<link rel="stylesheet" href="/src/styles.css">
+<style>
+  body { margin: 0; }
+  .sheet { max-width: 1180px; margin: 0 auto; padding: 44px 32px 64px; }
+  .sheet h1 { margin: 0; font-size: 28px; font-weight: 600; letter-spacing: -0.01em; }
+  .sheet > header p { margin: 8px 0 0; color: var(--ink-2); font-size: 14px; }
+  .sheet h2 { display: flex; align-items: center; gap: 8px; margin: 34px 0 12px; font-size: 17px; font-weight: 600; }
+  .sheet h2 small { margin-left: 4px; font-size: 13px; font-weight: 400; color: var(--ink-2); }
+  .specimens { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+  .spec { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; align-items: center; padding: 14px; border-radius: 16px; background: var(--surface); box-shadow: 0 0 0 0.5px var(--hairline); }
+  .spec .big { grid-row: span 2; zoom: 1.6; }
+  .spec .pair { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--ink-3); }
+  .spec .pair .glyph { width: 30px; height: 30px; border-radius: 8px; font-size: 14px; }
+  .spec .pair .glyph-latin { font-size: 11.5px; }
+  .spec .pair .glyph-latin-long { font-size: 9.5px; }
+  .spec .label { grid-column: 1 / -1; margin-top: 6px; font-size: 12.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .strip { display: flex; flex-wrap: wrap; gap: 10px; padding: 16px; border-radius: 16px; background: var(--surface); box-shadow: 0 0 0 0.5px var(--hairline); }
+  .strip .item { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 64px; font-size: 11px; color: var(--ink-2); }
+  .tile { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; background: var(--surface-2); box-shadow: var(--glyph-shadow); }
+  .glyph svg, .tile svg { display: block; }
+</style>
+</head>
+<body>
+<main class="sheet">
+  <header>
+    <h1>工具图标</h1>
+    <p>键帽外形不变，上面的字换成图形 · 24 格 · 线宽 1.8 · 圆头圆角 · 跟随文字颜色。每格左边放大，右边实际大小：上面现在、下面换成</p>
+  </header>
+  <div id="cats"></div>
+  <h2>分类图标<small>手机首页的分类方块和混合列表</small></h2>
+  <div class="strip" id="cat-icons"></div>
+  <h2>文件类型<small>拖进来的文件列表，颜色跟着分类</small></h2>
+  <div class="strip" id="kind-icons"></div>
+</main>
+
+<script type="module">
+  import { createElement } from 'react';
+  import { renderToStaticMarkup } from 'react-dom/server';
+  import { TOOLS, CATEGORIES } from '/src/tools.ts';
+  import { ToolIcon, CatIcon, KindIcon } from '/src/components/ToolIcon.tsx';
+  import { KINDS } from '/src/lib/match.ts';
+
+  // 每次单独渲染时 useId 都从头数，加前缀免得遮罩 id 撞车
+  let n = 0;
+  const html = (el) => renderToStaticMarkup(el, { identifierPrefix: `p${++n}-` });
+  const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  // 和 ui.tsx 里 Glyph 的文字规则一样
+  const oldGlyph = (mark) => {
+    const cls = /[一-鿿]/.test(mark) ? '' : mark.length > 2 ? ' glyph-latin-long' : ' glyph-latin';
+    return `<span class="glyph${cls}">${esc(mark)}</span>`;
+  };
+  const newGlyph = (id) => `<span class="glyph">${html(createElement(ToolIcon, { id }))}</span>`;
+
+  document.getElementById('cats').innerHTML = CATEGORIES.map((c) => {
+    const tools = TOOLS.filter((t) => t.cat === c.id);
+    return `<h2><span class="led" style="background:${c.led}"></span>${c.name}<small>${tools.length} 个</small></h2>
+      <div class="specimens">${tools
+        .map(
+          (t) => `<div class="spec">
+            <span class="big">${newGlyph(t.id)}</span>
+            <span class="pair">${oldGlyph(t.mark)}现在</span>
+            <span class="pair">${newGlyph(t.id)}换成</span>
+            <span class="label">${t.name}</span>
+          </div>`
+        )
+        .join('')}</div>`;
+  }).join('');
+
+  document.getElementById('cat-icons').innerHTML = CATEGORIES.map(
+    (c) => `<span class="item"><span class="tile">${html(createElement(CatIcon, { id: c.id }))}</span>${c.name}</span>`
+  ).join('');
+  document.getElementById('kind-icons').innerHTML = Object.entries(KINDS)
+    .map(([kind, k]) => `<span class="item"><span class="tile" style="color:${k.led}">${html(createElement(KindIcon, { kind, size: 18 }))}</span>${kind}</span>`)
+    .join('');
+</script>
+</body>
+</html>

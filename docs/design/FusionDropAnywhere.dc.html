@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>顺手 · 拖入文件（E）</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#FFFFFF}
+a{color:#1F4FD1;text-decoration:none}a:hover{text-decoration:underline}
+:focus-visible{outline:2px solid #1F4FD1;outline-offset:2px}
+.trow{transition:background .15s ease}
+.trow:hover{background:rgba(0,0,0,0.035);text-decoration:none}
+@media (prefers-reduced-transparency: reduce){.lg{background:rgba(250,250,248,0.97) !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important}}
+</style>
+</helmet>
+<div style="position: relative; min-height: 100vh; overflow: hidden; background: #FFFFFF; color: #1D1D1F; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC', 'Noto Sans SC', 'Hiragino Sans GB', system-ui, sans-serif; font-size: 15px; line-height: 1.47; -webkit-font-smoothing: antialiased;">
+
+  <!-- 液态玻璃折射：位移图与推荐面板同尺寸（760×560，圆角 32） -->
+  <svg aria-hidden="true" width="0" height="0" style="position: absolute; width: 0; height: 0; overflow: hidden;">
+    <defs>
+      <filter id="lgSheet" x="0" y="0" width="760" height="560" filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+        <feImage href="/_blob/7e0994c131bc05d0b4eab1f0f5f34470" x="0" y="0" width="760" height="560" preserveAspectRatio="none" result="map"></feImage>
+        <feGaussianBlur in="SourceGraphic" stdDeviation="10" edgeMode="duplicate" result="soft"></feGaussianBlur>
+        <feDisplacementMap in="soft" in2="map" scale="28.4" xChannelSelector="R" yChannelSelector="G"></feDisplacementMap>
+      </filter>
+    </defs>
+  </svg>
+
+  <div aria-hidden="true" style="pointer-events: none;">
+    <div style="display: flex; justify-content: center; padding-top: 12px;">
+      <div style="width: 432px; height: 52px; box-sizing: border-box; padding: 0 14px; border-radius: 999px; display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.7); box-shadow: 0 0 0 0.5px rgba(0,0,0,0.06), 0 8px 28px rgba(0,0,0,0.08); font-size: 13.5px;">
+        <span style="width: 26px; height: 26px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: linear-gradient(180deg, #3A68E4 0%, #1F4FD1 55%, #1A44B8 100%); color: #FFFFFF; font-size: 14px; font-weight: 600;">顺</span>
+        <span style="font-size: 15px; font-weight: 600;">顺手</span>
+        <span style="margin-left: 18px; color: #45443F;">全部工具</span><span style="margin-left: 18px; color: #45443F;">隐私</span><span style="margin-left: 18px; color: #45443F;">自行部署</span>
+      </div>
+    </div>
+    <div style="padding: 96px 24px 0; text-align: center;">
+      <h1 style="margin: 0; font-size: 80px; font-weight: 600; line-height: 1.08; letter-spacing: -0.015em;">顺手的小工具，<br>全在浏览器里。</h1>
+      <p style="margin: 22px auto 0; max-width: 620px; font-size: 21px; color: #6E6C68;">图片、PDF、音视频、代码和表格，打开就能用。</p>
+    </div>
+    <div style="max-width: 1100px; margin: 64px auto 0; padding: 0 24px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px;">
+      <sc-for list="{{bgCards}}" as="b" hint-placeholder-count="8">
+        <div style="position: relative; display: flex; gap: 14px; padding: 18px 20px; border-radius: 18px; background: #F5F4F1;">
+          <span style="flex: 0 0 auto; width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: #FFFFFF; box-shadow: inset 0 -1.5px 0 rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.06); font-size: 16px; font-weight: 600;">{{b.mark}}</span>
+          <span style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 17px; font-weight: 600;">{{b.name}}</span><span style="font-size: 14px; color: #6E6C68;">{{b.desc}}</span></span>
+          <span style="position: absolute; top: 16px; right: 16px; width: 6px; height: 6px; border-radius: 50%; background: {{b.led}};"></span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div aria-hidden="true" style="position: absolute; inset: 0; background: rgba(29,29,31,0.16);"></div>
+
+  <section aria-labelledby="drop-title" class="lg" style="position: absolute; top: 150px; left: 50%; width: 760px; height: 560px; margin-left: -380px; box-sizing: border-box; padding: 26px 28px 20px; display: flex; flex-direction: column; border-radius: 32px; background: rgba(255,255,255,0.64); backdrop-filter: {{sheetFilter}}; -webkit-backdrop-filter: {{sheetFilter}}; box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.95), inset 0 0 0 0.5px rgba(255,255,255,0.7), inset 0 -0.5px 0 rgba(255,255,255,0.6), 0 0 0 0.5px rgba(0,0,0,0.08), 0 30px 80px -20px rgba(0,0,0,0.35);">
+    <h2 id="drop-title" style="margin: 0; font-size: 24px; font-weight: 600; letter-spacing: -0.005em;">收到 3 个文件，想做点什么？</h2>
+    <p style="margin: 4px 0 0; font-size: 14px; color: #6E6C68;">按文件类型推荐了能用的工具，点一下就开始。</p>
+
+    <div style="display: flex; gap: 10px; margin-top: 16px;">
+      <sc-for list="{{files}}" as="f" hint-placeholder-count="3">
+        <span style="flex: 1 1 0; min-width: 0; display: flex; align-items: center; gap: 10px; height: 52px; box-sizing: border-box; padding: 0 12px 0 8px; border-radius: 14px; background: rgba(255,255,255,0.8); box-shadow: 0 0 0 0.5px rgba(0,0,0,0.06);">
+          <span aria-hidden="true" style="flex: 0 0 auto; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: {{f.thumb}}; color: #D0361E; font-size: 10px; font-weight: 700; letter-spacing: 0.04em;">{{f.badge}}</span>
+          <span style="min-width: 0; display: flex; flex-direction: column; line-height: 1.3;">
+            <span style="font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{f.name}}</span>
+            <span style="font-size: 12px; color: #6E6C68; font-variant-numeric: tabular-nums;">{{f.meta}}</span>
+          </span>
+        </span>
+      </sc-for>
+    </div>
+
+    <div style="display: flex; gap: 12px; margin-top: 14px;">
+      <sc-for list="{{groups}}" as="g" hint-placeholder-count="2">
+        <div style="flex: 1 1 0; min-width: 0; padding: 6px; border-radius: 20px; background: #FFFFFF;">
+          <p style="margin: 6px 10px 4px; display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; color: #45443F;"><span aria-hidden="true" style="width: 6px; height: 6px; border-radius: 50%; background: {{g.led}};"></span>{{g.title}}</p>
+          <sc-for list="{{g.tools}}" as="t" hint-placeholder-count="4">
+            <a href="{{t.href}}" class="trow" style="display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 10px; border-radius: 12px; color: #1D1D1F;">
+              <span style="flex: 0 0 auto; width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #F4F3F0; box-shadow: inset 0 -1.5px 0 rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.06); font-family: {{t.markFont}}; font-size: {{t.markSize}}; font-weight: 600;">{{t.mark}}</span>
+              <span style="flex: 0 0 auto; font-size: 15px; font-weight: 600;">{{t.name}}</span>
+              <span style="flex: 1 1 auto; min-width: 0; font-size: 13px; color: #6E6C68; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{t.desc}}</span>
+              <svg width="8" height="13" viewBox="0 0 8 13" fill="none" stroke="#C6C4BF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 1.5l5 5-5 5"></path></svg>
+            </a>
+          </sc-for>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 14px; margin-top: 12px; height: 64px; box-sizing: border-box; padding: 0 12px 0 14px; border-radius: 20px; background: #FFFFFF;">
+      <span style="flex: 0 0 auto; width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: #F4F3F0; box-shadow: inset 0 -1.5px 0 rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.06); font-size: 16px; font-weight: 600;">合</span>
+      <span style="flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; line-height: 1.35;">
+        <span style="display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600;">把照片和 PDF 合成一份 <span style="padding: 1px 8px; border-radius: 999px; background: rgba(31,79,209,0.10); font-size: 11.5px; font-weight: 600; color: #1F4FD1;">推荐</span></span>
+        <span style="font-size: 13px; color: #6E6C68;">照片自动转成 PDF 页面，再拖动调整顺序</span>
+      </span>
+      <a href="FusionPdfMerge.dc.html" style="flex: 0 0 auto; display: flex; align-items: center; height: 40px; padding: 0 18px; border-radius: 999px; font-size: 14px; font-weight: 600; color: #FFFFFF; text-decoration: none; background: linear-gradient(180deg, #3A68E4 0%, #1F4FD1 55%, #1A44B8 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.28), inset 0 -1px 0 rgba(0,0,0,0.18), 0 1px 2px rgba(20,50,140,0.25), 0 6px 14px -6px rgba(31,79,209,0.55);">开始合并</a>
+    </div>
+
+    <div style="flex: 1 1 auto;"></div>
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13px; color: #6E6C68;">
+      <span style="display: flex; align-items: center; gap: 7px;"><span aria-hidden="true" style="width: 6px; height: 6px; border-radius: 50%; background: #22B35E; box-shadow: 0 0 5px rgba(34,179,94,0.8);"></span>文件只读进了浏览器内存，关掉这个窗口就释放。</span>
+      <button type="button" style="border: 0; padding: 4px 0; background: none; cursor: pointer; font: inherit; font-size: 13px; color: #1F4FD1;">清空文件</button>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  // 真折射依赖 backdrop-filter: url(#svg滤镜)，目前只有 Chromium 支持；其他浏览器退回普通模糊
+  refractOK() {
+    const ua = (typeof navigator !== 'undefined' && navigator.userAgent) || '';
+    return /Chrome\/\d+/.test(ua) && !/Firefox\//.test(ua);
+  }
+
+  renderVals() {
+    const mk = (name, mark, desc, href) => {
+      const cjk = /[一-鿿]/.test(mark);
+      return {
+        name, mark, desc, href: href || '#',
+        markFont: cjk ? 'inherit' : "ui-monospace, 'SF Mono', Menlo, monospace",
+        markSize: cjk ? '14px' : '11px'
+      };
+    };
+    const photo1 = 'radial-gradient(circle at 64% 40%, #FFF6E2 0 8%, rgba(255,240,214,0) 30%), linear-gradient(180deg, #A9C3DB 0%, #E3D9CF 55%, #44627D 56%, #2E465C 100%)';
+    const photo2 = 'radial-gradient(120% 55% at 28% 100%, #4E6B5A 0 50%, rgba(78,107,90,0) 51%), linear-gradient(180deg, #C7D6DF 0%, #E6ECEE 100%)';
+    const bgCards = [
+      ['压', '图片压缩', '批量压缩，画质可调', '#22B35E'], ['合', '合并 PDF', '拖动排序，合成一份', '#F0442E'],
+      ['{ }', 'JSON 格式化', '校验、美化、压缩', '#3B82F6'], ['字', '字数统计', '字数与阅读时长', '#F5A524'],
+      ['gif', '视频转 GIF', '选一段，导出动图', '#8B5CF6'], ['表', 'CSV 查看器', '流式加载，可筛选', '#14A39A'],
+      ['转', '格式转换', 'HEIC、WebP 互转', '#22B35E'], ['QR', '二维码', '生成与识别', '#F5A524']
+    ].map(([mark, name, desc, led]) => ({ mark, name, desc, led }));
+
+    const lg = this.refractOK();
+    return {
+      bgCards,
+      files: [
+        { name: 'IMG_2048.HEIC', meta: '4.2 MB', thumb: photo1, badge: '' },
+        { name: 'IMG_2051.HEIC', meta: '3.8 MB', thumb: photo2, badge: '' },
+        { name: '报销单.pdf', meta: '12 页 · 1.6 MB', thumb: 'rgba(240,68,46,0.10)', badge: 'PDF' }
+      ],
+      groups: [
+        { title: '2 张照片可以', led: '#22B35E', tools: [
+          mk('转成 JPG', '转', '发给谁都能打开'),
+          mk('图片压缩', '压', '体积变小，画质可调', 'FusionImageCompress.dc.html'),
+          mk('去除 EXIF', '净', '含拍摄地点信息'),
+          mk('尺寸调整', '尺', '按比例批量缩放')
+        ] },
+        { title: '1 份 PDF 可以', led: '#F0442E', tools: [
+          mk('压缩 PDF', '小', '适合扫描件'),
+          mk('拆分 PDF', '拆', '按页码拆成多份'),
+          mk('PDF 转图片', 'jpg', '每页一张'),
+          mk('添加页码', '12', '位置与样式可选')
+        ] }
+      ],
+      sheetFilter: lg ? 'url(#lgSheet) saturate(170%) brightness(1.04)' : 'blur(30px) saturate(180%)'
+    };
+  }
+}
+</script>
+</body>
+</html>

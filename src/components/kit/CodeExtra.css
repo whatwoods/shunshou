@@ -1,0 +1,191 @@
+.ce-stack {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+.ce-panel {
+  padding: 24px;
+  border: 1px solid var(--divider);
+  border-radius: 22px;
+  background: var(--surface);
+  min-width: 0;
+}
+.ce-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+.ce-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+/* 按钮按内容宽，不拉满；并排的两栏各自的按钮都沉到底，高度对齐 */
+.ce-stack > .btn,
+.ce-stack > .btn-soft {
+  justify-self: start;
+}
+.ce-grid > .ce-stack {
+  display: flex;
+  flex-direction: column;
+}
+.ce-grid > .ce-stack > .btn:last-child {
+  margin-top: auto;
+  align-self: flex-start;
+}
+.ce-field {
+  display: grid;
+  gap: 9px;
+  min-width: 0;
+  flex: 1;
+}
+.ce-field input,
+.ce-field select,
+.ce-field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 42px;
+  border: 1px solid var(--divider);
+  border-radius: 12px;
+  background: var(--field);
+  color: var(--ink);
+  padding: 10px 12px;
+  font: inherit;
+}
+.ce-field input {
+  min-height: 38px;
+  border: 0;
+  border-radius: 11px;
+  background: var(--track);
+}
+.ce-field textarea {
+  min-height: 180px;
+  resize: vertical;
+  font-family: var(--mono);
+}
+.ce-note {
+  font-size: 13px;
+  color: var(--ink-2);
+  line-height: 1.7;
+}
+.ce-error {
+  color: var(--danger);
+  overflow-wrap: anywhere;
+}
+.ce-result {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: space-between;
+  padding: 15px 0;
+  border-bottom: 1px solid var(--divider);
+  min-width: 0;
+}
+.ce-result:last-child {
+  border-bottom: 0;
+}
+.ce-result div {
+  min-width: 0;
+}
+.ce-result code {
+  display: block;
+  margin-top: 6px;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  font: 13px/1.6 var(--mono);
+}
+.ce-result button {
+  flex-shrink: 0;
+}
+.ce-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+}
+/* 一组开关按等宽列排，换行后上下也对得齐 */
+.ce-checks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 4px 16px;
+}
+.ce-status {
+  min-height: 24px;
+  color: var(--ink-2);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.ce-panel h2 {
+  font-size: 18px;
+  margin: 0 0 18px;
+}
+.ce-large {
+  font: clamp(22px, 5vw, 36px)/1.5 var(--mono);
+  overflow-wrap: anywhere;
+}
+.ce-swatch {
+  height: 130px;
+  border: 1px solid var(--divider);
+  border-radius: 16px;
+  background: var(--sample-color);
+}
+.ce-palette {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+.ce-palette button {
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--divider);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  min-height: 80px;
+  font: 12px var(--mono);
+}
+.ce-palette span {
+  display: block;
+  height: 60px;
+  background: var(--sample-color);
+}
+.ce-palette small {
+  display: block;
+  padding: 8px 2px;
+}
+.ce-contrast {
+  padding: 25px;
+  border-radius: 14px;
+  background: var(--sample-bg);
+  color: var(--sample-fg);
+  overflow-wrap: anywhere;
+}
+.ce-stack progress {
+  width: 100%;
+  accent-color: var(--accent);
+}
+@media (max-width: 600px) {
+  .ce-grid {
+    grid-template-columns: 1fr;
+  }
+  .ce-panel {
+    padding: 18px;
+  }
+  .ce-result {
+    gap: 8px;
+  }
+  .ce-palette {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+/* 选中的文件和“选择文件”按钮放一行：按中线对齐 */
+.ce-row > .file-chip {
+  align-self: center;
+}
+/* 取色器只是一个色块，不跟输入框平分整行 */
+.ce-field:has(> input[type='color']) {
+  flex: none;
+}

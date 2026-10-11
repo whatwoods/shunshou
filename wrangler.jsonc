@@ -1,0 +1,11 @@
+// 整站都是静态资源：Worker 只负责把 dist/ 交给浏览器，没有任何后端逻辑
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "shunshou",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    // 前端路由：找不到的路径都回到 index.html
+    "not_found_handling": "single-page-application"
+  }
+}
