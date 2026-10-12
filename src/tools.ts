@@ -89,6 +89,7 @@ const ORDER = [
   'code-escape',
   'data-csv-viewer',
   'data-excel',
+  'data-excel-merge',
   'data-random',
   'data-chart',
   'data-clean',

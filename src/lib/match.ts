@@ -46,7 +46,11 @@ export const KINDS: Record<Kind, KindInfo> = {
   },
   video: { noun: (n) => `${n} 段视频`, led: '#8B5CF6', tools: ['av-compress', 'av-convert', 'av-gif', 'av-trim', 'av-audio', 'av-frame'] },
   audio: { noun: (n) => `${n} 段音频`, led: '#8B5CF6', tools: ['av-audio-edit', 'av-audio'] },
-  sheet: { noun: (n) => `${n} 个 Excel 表格`, led: '#14A39A', tools: ['data-excel', 'data-sql', 'data-chart', 'data-clean'] },
+  sheet: {
+    noun: (n) => `${n} 个 Excel 表格`,
+    led: '#14A39A',
+    tools: ['data-excel', 'data-excel-merge', 'data-sql', 'data-chart', 'data-clean']
+  },
   table: {
     noun: (n) => `${n} 个表格`,
     led: '#14A39A',

@@ -1,0 +1,258 @@
+/* ———— 文件列表：模板一张、数据若干张，同一个白卡片 ———— */
+.xm-files {
+  display: grid;
+  border-radius: 20px;
+  background: var(--surface);
+  overflow: hidden;
+}
+.xm-file {
+  display: grid;
+  grid-template-columns: auto minmax(0, auto) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 12px;
+  min-height: 56px;
+  padding: 8px 10px 8px 16px;
+  box-shadow: inset 0 -0.5px 0 var(--divider);
+}
+.xm-file .file-chip {
+  min-width: 0;
+}
+.xm-tag {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--accent-tint);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.xm-tag.is-data {
+  background: var(--track);
+  color: var(--ink-2);
+}
+.xm-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  min-width: 0;
+  color: var(--ink-2);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.xm-warn {
+  color: var(--warning);
+}
+.xm-map {
+  grid-column: 2 / -1;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.xm-map > summary {
+  width: fit-content;
+  padding: 2px 0;
+  cursor: pointer;
+}
+.xm-map[open] > summary {
+  margin-bottom: 6px;
+}
+.xm-map .field-row {
+  max-width: 420px;
+  padding: 0;
+}
+.xm-map-rows {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 6px 20px;
+  padding: 4px 0 6px;
+}
+.xm-map-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1.2fr);
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+}
+.xm-map-row > span:first-child {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.xm-map-row > span[aria-hidden] {
+  color: var(--ink-3);
+}
+.xm-add {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  min-height: 56px;
+  padding: 8px 16px;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.xm-add:hover {
+  background: var(--accent-tint);
+}
+.xm-add small {
+  color: var(--ink-3);
+  font-size: 12.5px;
+  font-weight: 400;
+}
+.xm-error {
+  margin: 0;
+  color: var(--danger);
+}
+
+/* ———— 关键列：可以多选的小胶囊 ———— */
+.xm-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 4px 16px 14px;
+}
+.xm-key {
+  min-height: 30px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--track);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+.xm-key.is-on {
+  background: var(--accent-tint-2);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* ———— 预览：像电子表格一样，有列字母和行号 ———— */
+.xm-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+.xm-legend i {
+  width: 12px;
+  height: 12px;
+  margin-left: 6px;
+  border-radius: 3px;
+}
+.xm-legend i.is-new,
+.xm-sheet tr.is-new td {
+  background: color-mix(in srgb, var(--success) 16%, transparent);
+}
+.xm-legend i.is-fill,
+.xm-sheet td.is-fill {
+  background: color-mix(in srgb, var(--warning) 24%, transparent);
+}
+.xm-preview .tw-panel-body {
+  padding: 0 0 4px;
+  overflow: hidden;
+}
+.xm-sheet {
+  max-height: 560px;
+  overflow: auto;
+  border-top: 0.5px solid var(--divider);
+}
+.xm-sheet table {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.xm-sheet th,
+.xm-sheet td {
+  height: 30px;
+  max-width: 220px;
+  padding: 0 10px;
+  border-right: 0.5px solid var(--divider);
+  border-bottom: 0.5px solid var(--divider);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+.xm-sheet thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--surface-2);
+  color: var(--ink-3);
+  font-weight: 500;
+  text-align: center;
+}
+.xm-sheet tbody th {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  min-width: 36px;
+  background: var(--surface-2);
+  color: var(--ink-3);
+  font-weight: 500;
+  text-align: center;
+}
+.xm-sheet thead th:first-child {
+  left: 0;
+  z-index: 3;
+}
+.xm-sheet td.is-num {
+  text-align: right;
+}
+.xm-sheet td.is-formula {
+  color: var(--ink-2);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+/* ———— 不一致的格子 ———— */
+.xm-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.office-kit .xm-table td,
+.xm-table th,
+.xm-table td {
+  padding: 8px 10px;
+  border: 0;
+  border-bottom: 0.5px solid var(--divider);
+  text-align: left;
+}
+.xm-table th {
+  color: var(--ink-2);
+  font-weight: 500;
+}
+.xm-other {
+  color: var(--ink-3);
+  text-decoration: line-through;
+}
+.xm-conflicts .tw-panel-body {
+  min-height: 0;
+}
+
+@media (max-width: 640px) {
+  .xm-file {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+  .xm-file .xm-meta {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .xm-map {
+    grid-column: 1 / -1;
+  }
+}

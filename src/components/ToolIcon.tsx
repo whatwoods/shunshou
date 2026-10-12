@@ -346,6 +346,17 @@ const TOOL: Record<string, Shape> = {
       </>
     )
   },
+  // 几份表合进一张：表格右上角一个加号
+  'data-excel-merge': {
+    base: (
+      <>
+        <rect x="3" y="6" width="15" height="15" rx="2.5" />
+        <path d="M3 11h15M3 16h15M8.5 6v15" />
+      </>
+    ),
+    cut: <path d="M18.5 2v8M14.5 6h8" strokeWidth="5.2" />,
+    top: <path d="M18.5 2v8M14.5 6h8" />
+  },
   // 表格导出成文件
   'data-excel': {
     base: (
