@@ -9,6 +9,7 @@ import { toast } from '../../components/Toast';
 import { toolById } from '../../tools';
 import { useFileDrop } from '../../lib/useFileDrop';
 import { useHandOff } from '../../lib/useHandOff';
+import { isAnimated } from '../../lib/image/animated';
 import { usePersisted, useSettingsLock } from '../../lib/settings';
 import { useShortcuts } from '../../lib/useShortcuts';
 import { baseName, fmtSize, pickFiles, saveBlob, saveZip } from '../../lib/files';
@@ -27,6 +28,7 @@ interface Item {
   box?: Box | null;
   size?: { width: number; height: number };
   error?: string;
+  animated?: boolean;
 }
 
 const defaults = {
@@ -49,7 +51,7 @@ export default function Page() {
   const [busy, setBusy] = useState(false);
   const [stage, setStage] = useState('');
   const [view, setView] = useState<'cut' | 'original'>('cut');
-  const [outputs, setOutputs] = useState<{ blob: Blob; name: string }[]>([]);
+  const [exported, setExported] = useState<{ signature: string; files: { blob: Blob; name: string }[] }>();
   const worker = useRef<Worker | null>(null);
   const itemsRef = useRef(items);
   itemsRef.current = items;
@@ -87,6 +89,10 @@ export default function Page() {
     const fresh = ok.map((file) => ({ id: crypto.randomUUID(), file, url: URL.createObjectURL(file), status: 'idle' as const }));
     setItems((old) => [...old, ...fresh]);
     setSelected((old) => old || fresh[0]?.id || '');
+    for (const item of fresh)
+      void isAnimated(item.file)
+        .then((yes) => yes && alive.current && setItems((old) => old.map((i) => (i.id === item.id ? { ...i, animated: true } : i))))
+        .catch(() => {});
   }, []);
   useHandOff(add);
   const dragging = useFileDrop(add);
@@ -168,18 +174,25 @@ export default function Page() {
     }
     ctx.drawImage(bmp, -box.x, -box.y);
     bmp.close();
-    return new Promise((resolve, reject) => c.toBlob((b) => (b ? resolve(b) : reject(new Error('导出失败'))), MIME[format], 0.92));
+    return new Promise((resolve, reject) =>
+      c.toBlob(
+        (b) => (b?.type === MIME[format] ? resolve(b) : reject(new Error('浏览器不支持这个输出格式，请选择 PNG'))),
+        MIME[format],
+        0.92
+      )
+    );
   }
-  const exportSig = `${s.bg}:${s.color}:${s.trim}:${format}:${done.map((i) => i.id).join()}`;
+  const exportSig = `${maskSig}:${s.bg}:${s.color}:${s.trim}:${format}:${done.map((i) => i.id).join()}`;
+  const outputs = !busy && exported?.signature === exportSig ? exported.files : [];
   useEffect(() => {
     let off = false;
+    setExported(undefined);
     if (busy || !done.length) {
-      setOutputs([]);
       return;
     }
     Promise.all(done.map(async (i) => ({ blob: await compose(i), name: fileName(i) })))
-      .then((list) => !off && setOutputs(list))
-      .catch(() => !off && setOutputs([]));
+      .then((files) => !off && setExported({ signature: exportSig, files }))
+      .catch((error) => !off && toast(error instanceof Error ? error.message : '导出失败，请重试', 'error'));
     return () => {
       off = true;
     };
@@ -274,6 +287,11 @@ export default function Page() {
                 <p className="image-kit-caption">{item.status === 'error' ? item.error : '点“开始抠图”，结果会出现在这里'}</p>
               )}
             </div>
+            {items.some((i) => i.animated) && (
+              <p className="image-kit-warn" role="status">
+                动图只处理第一帧，导出静态图。
+              </p>
+            )}
             {outputs.length > 0 && !busy && <NextSteps outputs={outputs} from="image-cutout" />}
           </section>
         )}
@@ -349,6 +367,7 @@ export default function Page() {
                             ? '正在抠图…'
                             : (i.error ??
                               (i.status === 'done' ? `${i.size!.width} × ${i.size!.height} · 已抠好` : `${fmtSize(i.file.size)} · 待处理`))}
+                          {i.animated && ' · 动图只处理第一帧'}
                         </small>
                       </span>
                       <Led status={i.status} />

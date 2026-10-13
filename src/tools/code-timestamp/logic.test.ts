@@ -20,6 +20,11 @@ describe('时间戳与时区', () => {
     expect(() => parseDate('2024-02-30T12:00', 'UTC')).toThrow();
     expect(() => parseDate('2024-03-10T02:30', 'America/New_York')).toThrow();
   });
+  it('重新解析带时区标注的输出时保留原来的时刻', () => {
+    const time = 1704067200123;
+    const formatted = formatTime(time, 'Asia/Shanghai');
+    expect(parseDate(formatted.zoned, 'America/New_York')).toBe(time);
+  });
   it('重复时间允许显式选择前后两次', () => {
     const early = parseDate('2024-11-03T01:30', 'America/New_York', 'earlier');
     const late = parseDate('2024-11-03T01:30', 'America/New_York', 'later');

@@ -197,10 +197,11 @@ export default function ImageCompress() {
 
   const update = (patch: Partial<Settings>) => setSettings((s) => ({ ...s, ...patch }));
 
-  const done = items.filter((it) => it.status === 'done' && it.out);
+  const settingsPending = applied.current !== settings;
+  const done = settingsPending ? [] : items.filter((it) => it.status === 'done' && it.out);
   const before = done.reduce((n, it) => n + it.file.size, 0);
   const after = done.reduce((n, it) => n + it.out!.blob.size, 0);
-  const finished = items.length > 0 && items.every((it) => it.status === 'done' || it.status === 'error');
+  const finished = !settingsPending && items.length > 0 && items.every((it) => it.status === 'done' || it.status === 'error');
   const sel = items.find((it) => it.id === selId) ?? items[0];
   const qualityUnused = settings.fmt === 'keep' && items.length > 0 && items.every((it) => it.file.type === 'image/png');
 
@@ -251,6 +252,7 @@ export default function ImageCompress() {
   const fit = zoom ? { objectFit: 'none' as const, objectPosition: `${zoom.x}% ${zoom.y}%` } : undefined;
 
   const status = (it: Item) => {
+    if (settingsPending) return 'work' as const;
     if (it.status === 'error') return 'error' as const;
     if (it.status === 'done') return 'done' as const;
     if (it.status === 'working' || it.out) return 'work' as const;
@@ -367,7 +369,7 @@ export default function ImageCompress() {
                       <small>没能处理</small>
                       <b>见右侧说明</b>
                     </>
-                  ) : sel.out ? (
+                  ) : sel.out && !settingsPending && sel.status === 'done' ? (
                     <>
                       <small>
                         {sel.out.kept
@@ -494,7 +496,7 @@ export default function ImageCompress() {
                   </button>
                   {on && (
                     <span className="file-actions">
-                      {it.status === 'done' && it.out && (
+                      {!settingsPending && it.status === 'done' && it.out && (
                         <button
                           type="button"
                           className="icon-btn"

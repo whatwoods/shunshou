@@ -16,13 +16,15 @@ export default function CsvJson() {
   const direction = dir.value;
   const setDirection = (value: 'csv' | 'json') => setDir({ value });
   const [input, setInput] = useState('');
-  const [result, setResult] = useState<Result | null>(null);
+  const [made, setMade] = useState<{ value: Result; signature: string } | null>(null);
+  const signature = JSON.stringify([direction, w.options, input]);
+  const result = made?.signature === signature ? made.value : null;
   const outputFormat = direction === 'csv' ? 'json' : 'csv';
   async function convert() {
     w.setBusy(true);
     w.setError('');
     w.setStatus('正在转换…');
-    setResult(null);
+    setMade(null);
     try {
       await w.call({ action: 'text', text: input, format: direction, options: w.options });
       const value = await w.call<Result>({
@@ -32,7 +34,7 @@ export default function CsvJson() {
         delimiter: w.options.delimiter || ',',
         header: w.options.header
       });
-      setResult(value);
+      setMade({ value, signature });
       w.setStatus('转换完成。');
     } catch (e) {
       w.setError(e instanceof Error ? e.message : String(e));
@@ -43,7 +45,7 @@ export default function CsvJson() {
   async function file(file: File) {
     w.setBusy(true);
     w.setError('');
-    setResult(null);
+    setMade(null);
     try {
       const format = /\.json$/i.test(file.name) ? 'json' : 'csv';
       setDirection(format);
@@ -55,7 +57,7 @@ export default function CsvJson() {
         delimiter: w.options.delimiter || ',',
         header: w.options.header
       });
-      setResult(value);
+      setMade({ value, signature: JSON.stringify([format, w.options, '']) });
       setInput('');
       w.setStatus(`${file.name} 已转换，可下载完整结果。`);
     } catch (e) {
@@ -65,7 +67,7 @@ export default function CsvJson() {
     }
   }
   return (
-    <DataPage id="data-csv-json" busy={w.busy} status={w.status} error={w.error}>
+    <DataPage id="data-csv-json" busy={w.busy} status={made && !result ? '' : w.status} error={w.error}>
       <div className="data-controls">
         <SegField
           label="转换方向"
@@ -73,7 +75,7 @@ export default function CsvJson() {
           disabled={w.busy}
           onChange={(value) => {
             setDirection(value);
-            setResult(null);
+            setMade(null);
           }}
           options={[
             { value: 'csv', label: 'CSV → JSON' },
@@ -86,7 +88,7 @@ export default function CsvJson() {
         value={w.options}
         onChange={(v) => {
           w.setOptions(v);
-          setResult(null);
+          setMade(null);
         }}
       />
       <DataImport accept=".csv,.tsv,.txt,.json" onFile={file} busy={w.busy} />
@@ -98,7 +100,7 @@ export default function CsvJson() {
             value={input}
             onChange={(e) => {
               setInput(e.target.value);
-              setResult(null);
+              setMade(null);
             }}
             placeholder={direction === 'csv' ? '姓名,数量\n小顺,12' : '[{"姓名":"小顺","数量":12}]'}
             spellCheck={false}

@@ -12,7 +12,7 @@ import {
   useIncoming,
   useOfficeRead
 } from '../../components/kit/OfficeKit';
-import type { DiffRow } from './logic';
+import { exportDiff, type DiffRow } from './logic';
 import { ExampleButton, SwitchRow } from '../../components/ui';
 const EXAMPLE = [
   '会议时间：10 月 14 日 下午 3 点\n地点：三楼小会议室\n参会：产品、设计、前端\n议题：首页改版\n预计 1 小时',
@@ -66,6 +66,7 @@ export default function Page() {
             ) : (
               text || ' '
             )}
+            {!row.unchanged && (isLeft ? row.leftNoNewline : row.rightNoNewline) && <small className="office-note">（行末无换行）</small>}
           </>
         ) : (
           <span aria-label="空行">　</span>
@@ -74,14 +75,7 @@ export default function Page() {
     );
   }
   const ready = result !== undefined && !busy && !reading && !error && !workerError;
-  const diffText =
-    result
-      ?.map((r) =>
-        r.left === r.right
-          ? '  ' + r.left
-          : [r.left !== undefined ? '- ' + r.left : '', r.right !== undefined ? '+ ' + r.right : ''].filter(Boolean).join('\n')
-      )
-      .join('\n') || '';
+  const diffText = result ? exportDiff(result) : '';
   return (
     <OfficePage id="office-text-diff" sub="逐行比较，变化的词也一眼看清">
       <TextLayout

@@ -260,36 +260,43 @@ export function useIncoming(onFiles: (files: File[]) => void) {
   return useFileDrop(onFiles);
 }
 export function useOfficeWorker<T>(createWorker: () => Worker, input: unknown, delay = 180) {
-  const [result, setResult] = useState<T>();
-  const [error, setError] = useState('');
-  const [busy, setBusy] = useState(false);
+  const [state, setState] = useState<{ input: string; result?: T; error: string; busy: boolean }>();
   const factory = useRef(createWorker);
   factory.current = createWorker;
   const serialized = JSON.stringify(input);
   useEffect(() => {
-    setBusy(true);
-    setError('');
-    setResult(undefined);
-    const worker = factory.current();
-    const timer = setTimeout(() => worker.postMessage(JSON.parse(serialized)), delay);
+    let active = true;
+    let worker: Worker;
+    const fail = () => {
+      if (active) setState({ input: serialized, busy: false, error: '处理失败，内容短一点再试' });
+    };
+    setState({ input: serialized, error: '', busy: true });
+    try {
+      worker = factory.current();
+    } catch {
+      fail();
+      return;
+    }
+    const timer = setTimeout(() => {
+      try {
+        worker.postMessage(JSON.parse(serialized));
+      } catch {
+        fail();
+      }
+    }, delay);
     worker.onmessage = (e) => {
-      setBusy(false);
-      if (e.data.error) {
-        setError(e.data.error);
-        setResult(undefined);
-      } else setResult(e.data.result);
+      if (!active) return;
+      setState({ input: serialized, busy: false, error: e.data.error || '', result: e.data.error ? undefined : e.data.result });
     };
-    worker.onerror = () => {
-      setBusy(false);
-      setResult(undefined);
-      setError('处理失败，内容短一点再试');
-    };
+    worker.onerror = fail;
     return () => {
+      active = false;
       clearTimeout(timer);
       worker.terminate();
     };
   }, [serialized, delay]);
-  return { result, error, busy };
+  const current = state?.input === serialized ? state : undefined;
+  return { result: current?.result, error: current?.error || '', busy: current?.busy ?? true };
 }
 export function Status({ busy, error, ready }: { busy?: boolean; error?: string; ready?: boolean }) {
   // 处理中锁住标题旁的“恢复默认”

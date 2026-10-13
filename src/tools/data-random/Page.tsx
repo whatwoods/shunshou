@@ -9,13 +9,15 @@ const defaults = { mode: 'integer', min: '1', max: '100', count: '1', groups: '2
 export default function RandomPage() {
   const [settings, setSettings] = usePersisted('data-random', defaults);
   const [names, setNames] = useState('');
-  const [result, setResult] = useState('');
+  const [made, setMade] = useState<{ text: string; signature: string } | null>(null);
+  const signature = JSON.stringify([settings, names]);
+  const result = made?.signature === signature ? made.text : '';
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState('填好范围，或换到名单抽签。');
   function update<K extends keyof typeof defaults>(key: K, value: (typeof defaults)[K]) {
     setSettings((s) => ({ ...s, [key]: value }));
-    setResult('');
+    setMade(null);
     setError('');
     setStatus('设置改了，再点一次生成。');
   }
@@ -25,7 +27,7 @@ export default function RandomPage() {
   }
   function run() {
     setError('');
-    setResult('');
+    setMade(null);
     try {
       let output: string;
       if (settings.mode === 'integer')
@@ -43,7 +45,7 @@ export default function RandomPage() {
             settings.mode === 'shuffle' ? false : settings.replacement
           ).join('\n');
       }
-      setResult(output);
+      setMade({ text: output, signature });
       setStatus('已生成，再点一次重新随机。');
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -52,7 +54,7 @@ export default function RandomPage() {
   async function readFile(file: File) {
     setBusy(true);
     setError('');
-    setResult('');
+    setMade(null);
     setStatus('正在读取名单…');
     try {
       if (!/\.(txt|md)$/i.test(file.name)) throw new Error('请选择 TXT 或 Markdown 文本，每行一个名字。');
@@ -69,7 +71,7 @@ export default function RandomPage() {
     }
   }
   return (
-    <DataPage id="data-random" busy={busy} error={error} status={status}>
+    <DataPage id="data-random" busy={busy} error={error} status={made && !result ? '设置改了，再点一次生成。' : status}>
       <div className="data-controls">
         <SegField
           label="生成方式"
@@ -141,7 +143,7 @@ export default function RandomPage() {
               value={names}
               onChange={(e) => {
                 setNames(e.target.value);
-                setResult('');
+                setMade(null);
                 setError('');
               }}
               placeholder={'小顺\n小手\n小林'}
@@ -183,7 +185,7 @@ export default function RandomPage() {
           disabled={busy || (!names && !result)}
           onClick={() => {
             setNames('');
-            setResult('');
+            setMade(null);
             setError('');
             setStatus('已清空。');
             toast('已清空');

@@ -38,6 +38,7 @@ export function useDataWorkspace(id: string) {
     }
   }
   async function exportFile(format: 'csv' | 'json', view?: ViewOptions) {
+    const gen = generation.current;
     setBusy(true);
     setError('');
     setStatus('正在生成文件…');
@@ -50,13 +51,14 @@ export function useDataWorkspace(id: string) {
         header: options.header,
         options: view
       });
+      if (gen !== generation.current) return;
       saveBlob(result.blob, `${sheet || '数据'}.${format}`);
       setStatus('导出完成。');
       toast('已开始下载');
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      if (gen === generation.current) setError(e instanceof Error ? e.message : String(e));
     } finally {
-      setBusy(false);
+      if (gen === generation.current) setBusy(false);
     }
   }
   const fetchView = (start: number, limit: number, view: ViewOptions = { filter: '', sort: -1, descending: false }) =>
@@ -67,6 +69,7 @@ export function useDataWorkspace(id: string) {
     setBusy(false);
     setSheets([]);
     setSheet('');
+    setError('');
     setStatus('已取消，请重新导入文件。');
   }
   return {

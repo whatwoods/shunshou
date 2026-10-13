@@ -33,7 +33,9 @@ export function importTable(db: Database, suggested: string, table: TableData): 
 }
 export function queryTable(db: Database, query: string): TableData {
   if (!query.trim()) throw new Error('先写一条 SQL，例如 SELECT * FROM "data" LIMIT 100。');
-  const results = db.exec(query);
+  // sql.js 支持 useBigInt，但它的独立类型包尚未声明第三个参数。
+  const exec = db.exec as (sql: string, params: null, config: { useBigInt: true }) => { columns: string[]; values: unknown[][] }[];
+  const results = exec.call(db, query, null, { useBigInt: true });
   const last = results.at(-1);
   return last
     ? {
@@ -42,9 +44,13 @@ export function queryTable(db: Database, query: string): TableData {
           row.map((v) =>
             v instanceof Uint8Array
               ? Array.from(v, (byte) => byte.toString(16).padStart(2, '0')).join('')
-              : typeof v === 'number' || v == null
-                ? v
-                : cellText(v)
+              : typeof v === 'bigint'
+                ? Number.isSafeInteger(Number(v))
+                  ? Number(v)
+                  : String(v)
+                : typeof v === 'number' || v == null
+                  ? (v ?? null)
+                  : cellText(v)
           )
         )
       }

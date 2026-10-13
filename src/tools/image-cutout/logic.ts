@@ -40,6 +40,11 @@ export function toMask(pred: Float32Array, clean: boolean): Uint8ClampedArray {
   return out;
 }
 
+export function applyMask(pixels: Uint8ClampedArray, mask: Uint8ClampedArray) {
+  // 遮罩只能减少透明度，不能把原本透明的像素重新变成不透明。
+  for (let i = 3; i < pixels.length; i += 4) pixels[i] = Math.round((pixels[i] * mask[i - 3]) / 255);
+}
+
 // 主体所在的范围（alpha 超过阈值的像素外接框），裁掉四周透明边用；整张都透明时返回 null
 export function bounds(alpha: (i: number) => number, width: number, height: number, threshold = 8) {
   let x0 = width,

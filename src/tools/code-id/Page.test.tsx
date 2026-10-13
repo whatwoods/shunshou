@@ -27,7 +27,10 @@ test('恢复默认后旧结果作废', async () => {
   await act(async () => root.render(createElement(Page)));
   const output = () => box.querySelector<HTMLTextAreaElement>('textarea[readonly]')!.value;
 
-  await act(async () => box.querySelector('form')!.requestSubmit());
+  await act(async () => {
+    box.querySelector('form')!.requestSubmit();
+    await import('./logic');
+  });
   await vi.waitFor(() => expect(output()).toMatch(/^[0-9A-Z]{26}$/));
 
   const reset = [...box.querySelectorAll('button')].find((b) => b.textContent?.includes('恢复默认'))!;

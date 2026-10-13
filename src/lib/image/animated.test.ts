@@ -43,3 +43,9 @@ it('单帧图不误报', async () => {
   expect(await isAnimated(new Blob([webp('VP8 ')]))).toBe(false);
   expect(await isAnimated(new Blob([new Uint8Array([0xff, 0xd8, 0xff])]))).toBe(false);
 });
+it('损坏的 WebP 块长度不会倒退或卡住识别', async () => {
+  const bytes = webp('VP8 ');
+  bytes.set([...new TextEncoder().encode('JUNK')], 12);
+  new DataView(bytes.buffer).setUint32(16, 0xfffffff8, true);
+  expect(await isAnimated(new Blob([bytes]))).toBe(false);
+});

@@ -48,3 +48,13 @@ it('导出 JSON 时同名列不会互相覆盖', async () => {
   const { toJson } = await import('../../lib/dataCore');
   expect(JSON.parse(toJson({ columns: ['id', 'id', 'id_2'], rows: [[1, 2, 3]] }))).toEqual([{ id: 1, id_2: 2, id_2_2: 3 }]);
 });
+it('64 位整数查询和导出保留精度，安全整数仍是数字', () => {
+  const db = new SQL.Database();
+  try {
+    expect(queryTable(db, 'SELECT 9007199254740993 AS big, -9223372036854775808 AS negative, 42 AS small, 2.5 AS decimal').rows).toEqual([
+      ['9007199254740993', '-9223372036854775808', 42, 2.5]
+    ]);
+  } finally {
+    db.close();
+  }
+});

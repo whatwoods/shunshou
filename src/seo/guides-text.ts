@@ -69,13 +69,16 @@ export const textGuides: Record<string, ToolGuide> = {
     related: ['office-html', 'office-word-count', 'code-format']
   },
   'office-html': {
-    summary: '预览和编辑 HTML 页面，提供手机、平板及桌面宽度，可切换脚本运行方式并下载编辑后的 HTML 文件。',
+    summary: '预览和编辑 HTML 页面，提供手机、平板及桌面宽度，不执行脚本，下载时保留完整 HTML 代码。',
     steps: [
       '粘贴 HTML 代码，或打开 HTML、HTM、XHTML、TXT 文件。',
-      '选择预览方式和设备宽度，查看页面；需要交互时切到“运行脚本”。',
+      '选择设备宽度，检查 HTML 和样式的显示效果。',
       '按需要全屏查看预览，或下载当前 HTML。'
     ],
-    tips: ['外部图片、字体、样式及其他联网资源不会加载，预览里的链接也无法打开。', '文件最多 5 MB；设备预览宽于当前区域时会整体缩小。'],
+    tips: [
+      '预览不执行脚本，不加载外部资源，链接也无法打开。下载的 HTML 保留原代码，请自行确认后运行。',
+      '文件最多 5 MB；设备预览宽于当前区域时会整体缩小。'
+    ],
     related: ['office-markdown', 'code-format', 'code-escape']
   },
   'office-password': {

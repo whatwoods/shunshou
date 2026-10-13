@@ -17,7 +17,7 @@ export function parseDate(input: string, zone: string, disambiguation: Disambigu
   const value = input.trim();
   if (!value) throw new Error('请输入日期和时间');
   try {
-    if (/(?:Z|[+-]\d{2}:?\d{2})$/i.test(value)) return Temporal.Instant.from(value).epochMilliseconds;
+    if (/(?:Z|[+-]\d{2}:?\d{2})(?:\[[^\]]+\])*$/i.test(value)) return Temporal.Instant.from(value).epochMilliseconds;
     return Temporal.PlainDateTime.from(value, { overflow: 'reject' }).toZonedDateTime(zone, { disambiguation }).epochMilliseconds;
   } catch {
     throw new Error('日期或时区不对，或碰上了夏令时跳过、重复的时刻，请检查输入');

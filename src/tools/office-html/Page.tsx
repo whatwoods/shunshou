@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { toast } from '../../components/Toast';
 import { DownloadIcon, ExampleButton, Field, Segmented } from '../../components/ui';
 import {
-  ChoiceList,
   OfficePage,
   Panel,
   SideGroup,
@@ -18,7 +17,7 @@ import { useShortcuts } from '../../lib/useShortcuts';
 import './html-preview.css';
 import { useMedia, TOUCH } from '../../lib/useMedia';
 
-// 运行脚本时用的隔离页，见 public/html-preview-frame.html；线上静态托管会去掉 .html 后缀
+// 线上静态托管会去掉 .html 后缀；隔离页让所有用户内容保持无脚本沙盒。
 const FRAME = import.meta.env.DEV ? '/html-preview-frame.html' : '/html-preview-frame';
 const READY = 'shunshou-html-preview-ready';
 
@@ -28,7 +27,6 @@ const DEVICES = {
   desktop: { label: '桌面', width: 0, height: 680 }
 };
 type Device = keyof typeof DEVICES;
-type Mode = 'safe' | 'scripts';
 
 const EXAMPLE = `<!doctype html>
 <html lang="zh-CN">
@@ -54,7 +52,7 @@ const EXAMPLE = `<!doctype html>
     <div class="count">已有 <b id="n">7</b> 人报名</div>
   </div>
   <script>
-    // 切到“运行脚本”后，按钮就能点了
+    // 预览不执行脚本；下载的 HTML 保留完整代码
     let n = 7;
     document.getElementById('join').onclick = () => {
       document.getElementById('n').textContent = ++n;
@@ -68,8 +66,6 @@ export default function Page() {
   const [html, setHtml] = useState('');
   const [name, setName] = useState('page.html');
   const [p, setP] = usePreference('office-html', { device: 'desktop' as Device });
-  // 运行脚本不记住：每次打开都从安全预览开始
-  const [mode, setMode] = useState<Mode>('safe');
   const touch = useMedia(TOUCH);
   const { reading, error, read, invalidate } = useOfficeRead();
 
@@ -81,8 +77,8 @@ export default function Page() {
   }, [html]);
 
   const frame = useRef<HTMLIFrameElement>(null);
-  const latest = useRef({ html: shown.html, scripts: mode === 'scripts' });
-  latest.current = { html: shown.html, scripts: mode === 'scripts' };
+  const latest = useRef({ html: shown.html });
+  latest.current = { html: shown.html };
   useEffect(() => {
     const onMessage = (e: MessageEvent) => {
       const win = frame.current?.contentWindow;
@@ -136,16 +132,7 @@ export default function Page() {
       <TextLayout
         side={
           <>
-            <h2 className="group-title">预览方式</h2>
-            <ChoiceList
-              label="预览方式"
-              value={mode}
-              onChange={setMode}
-              options={[
-                { value: 'safe', label: '安全预览', hint: '不运行脚本，不加载外部图片、字体和样式' },
-                { value: 'scripts', label: '运行脚本', hint: '在隔离沙盒里运行，不能联网、弹窗或跳转' }
-              ]}
-            />
+            <p className="group-note">仅预览 HTML 和样式，不执行脚本；下载时保留完整代码。</p>
             <SideGroup title="设备" note="内嵌的 data: 图片照常显示；链接在预览里打不开。">
               <Field div block label="宽度">
                 <Segmented
@@ -210,11 +197,11 @@ export default function Page() {
             <div ref={stage} className={'html-stage is-' + p.device}>
               {shown.html ? (
                 <div className="html-device" style={{ width: device.width ? device.width * scale : '100%', height: device.height * scale }}>
-                  {/* 两种模式都放进隔离页，再由它套一层 srcdoc：里层哪儿都跳不了，网址里夹带的内容到不了任何服务器（包括本站） */}
+                  {/* 隔离页限制内层 srcdoc 的跳转；用户脚本始终禁用。 */}
                   <iframe
-                    key={mode + shown.n}
+                    key={shown.n}
                     ref={frame}
-                    title={mode === 'safe' ? 'HTML 预览' : 'HTML 预览（运行脚本）'}
+                    title="HTML 预览"
                     sandbox="allow-scripts"
                     referrerPolicy="no-referrer"
                     src={FRAME}

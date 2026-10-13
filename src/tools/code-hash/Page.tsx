@@ -7,7 +7,7 @@ import { Led } from '../../components/ui';
 import { DropOverlay } from '../../components/DropZone';
 import { CodeExtraResult } from '../../components/kit/CodeExtraResult';
 import { toolById } from '../../tools';
-import { usePersisted } from '../../lib/settings';
+import { usePersisted, useSettingsLock } from '../../lib/settings';
 import { useFileDrop } from '../../lib/useFileDrop';
 import { pickFiles, saveBlob } from '../../lib/files';
 import type { Algorithm } from './logic';
@@ -20,10 +20,13 @@ export default function Page() {
   const setSelected = (next: Algorithm[]) => setSaved({ algorithms: next });
   const [text, setText] = useState('');
   const [file, setFile] = useState<File | null>(null);
-  const [result, setResult] = useState<Record<string, string>>({});
+  const signature = JSON.stringify([text, selected]);
+  const [made, setMade] = useState<{ value: Record<string, string>; signature: string; file: File | null } | null>(null);
+  const result = made?.signature === signature && made.file === file ? made.value : {};
   const [expected, setExpected] = useState('');
   const [status, setStatus] = useState('输入文字，或拖入任意文件');
   const [busy, setBusy] = useState(false);
+  useSettingsLock(busy);
   const [error, setError] = useState(false);
   const [progress, setProgress] = useState(0);
   const worker = useRef<Worker | null>(null);
@@ -31,7 +34,7 @@ export default function Page() {
     worker.current?.terminate();
     worker.current = null;
     setBusy(false);
-    setResult({});
+    setMade(null);
     setError(false);
     setStatus('输入已更新');
   }
@@ -60,7 +63,7 @@ export default function Page() {
       if (worker.current !== current) return;
       if (data.progress !== undefined) setProgress(data.progress);
       if (data.result || data.error) {
-        setResult(data.result || {});
+        setMade(data.result ? { value: data.result, signature, file } : null);
         setError(!!data.error);
         setStatus(data.error ? `计算失败：${data.error}` : '计算完成');
         setBusy(false);
@@ -80,6 +83,7 @@ export default function Page() {
   }
   // 文字随打随算，文件选好就开始算（分块进行，随时可以取消）；空文本仍然可以手动点“开始计算”
   useEffect(() => {
+    if (worker.current) reset();
     if (!file && !text) return;
     const timer = setTimeout(run, file ? 0 : 250);
     return () => clearTimeout(timer);
@@ -165,7 +169,7 @@ export default function Page() {
           </div>
           <div role="status" className={error ? 'ce-error' : 'ce-status'}>
             <Led status={error ? 'error' : busy ? 'work' : Object.keys(result).length ? 'done' : 'idle'} />
-            {status}
+            {made && !Object.keys(result).length ? '输入已更新' : status}
           </div>
           {busy && <progress value={progress} max={1} aria-label="计算进度" />}
         </section>

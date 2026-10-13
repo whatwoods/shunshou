@@ -9,7 +9,7 @@
   Cache-Control: public, max-age=31536000, immutable
 
 # HTML 预览的隔离页：换成只允许内联脚本和样式、禁止一切网络请求和跳转（frame-src 落到 default-src 'none'）的策略，并允许本站把它嵌进 iframe。
-# webrtc 'block' 挡住 WebRTC 打洞（不认识这条指令的浏览器会忽略）；同时关掉 DNS 预解析，免得 <link rel=dns-prefetch> 把内容带出去
+# 用户内容的内层 sandbox 始终禁用脚本；webrtc 'block' 仅作支持它的浏览器上的补充防护。同时关掉 DNS 预解析。
 /html-preview-frame
   ! Content-Security-Policy
   Content-Security-Policy: default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; media-src data: blob:; connect-src 'none'; form-action 'none'; base-uri 'none'; frame-ancestors 'self'; webrtc 'block'

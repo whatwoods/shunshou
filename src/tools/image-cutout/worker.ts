@@ -14,7 +14,7 @@ import partB from './models/isnet-part-b.bin?url';
 import partC from './models/isnet-part-c.bin?url';
 import partD from './models/isnet-part-d.bin?url';
 import { decode } from '../../lib/image/decode';
-import { bounds, MODELS, toMask, toTensor, type ModelId } from './logic';
+import { applyMask, bounds, MODELS, toMask, toTensor, type ModelId } from './logic';
 
 const FILES: Record<ModelId, string[]> = { fast: [fastUrl], fine: [partA, partB, partC, partD] };
 // 输出图最长边：再大的照片也先缩到这里，免得内存吃紧
@@ -133,7 +133,7 @@ async function run({ id, file, model, clean }: Job) {
   bc.drawImage(src, 0, 0, width, height);
   src.close();
   const img = bc.getImageData(0, 0, width, height);
-  for (let i = 3; i < img.data.length; i += 4) img.data[i] = alpha[i - 3];
+  applyMask(img.data, alpha);
   bc.putImageData(img, 0, 0);
   const box = bounds((i) => img.data[i * 4 + 3], width, height);
   const blob = await big.convertToBlob({ type: 'image/png' });

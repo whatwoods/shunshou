@@ -1,4 +1,5 @@
 import Papa from 'papaparse';
+import { visit } from 'jsonc-parser';
 
 export type Cell = string | number | boolean | null;
 export interface TableData {
@@ -59,7 +60,12 @@ export function fromRows(rows: unknown[][], header = true, infer = false): Table
 export function fromJson(value: unknown): TableData {
   if (!Array.isArray(value)) throw new Error('JSON 顶层需要是数组，例如 [{"姓名":"小顺"}]。');
   if (!value.length) return { columns: [], rows: [] };
-  if (value.every(Array.isArray)) return fromRows(value, false, true);
+  const cell = (v: unknown): Cell => (typeof v === 'number' || typeof v === 'boolean' || v == null ? (v ?? null) : cellText(v));
+  if (value.every(Array.isArray)) {
+    const width = value.reduce((n, row) => Math.max(n, row.length), 0);
+    const columns = Array.from({ length: width }, (_, i) => `列 ${i + 1}`);
+    return { columns, rows: value.map((row) => columns.map((_, i) => cell(row[i]))) };
+  }
   if (!value.every((row) => row && typeof row === 'object' && !Array.isArray(row))) throw new Error('数组里要么全是对象，要么全是数组。');
   const columns = [...new Set(value.flatMap((row) => Object.keys(row)))];
   return {
@@ -68,10 +74,32 @@ export function fromJson(value: unknown): TableData {
       columns.map((key) => {
         // 只读自身的字段：这一行没有 constructor、toString 这类键时，不能读到 Object 原型上的函数
         const v = Object.hasOwn(row, key) ? row[key] : null;
-        return typeof v === 'number' || typeof v === 'boolean' || v == null ? (v ?? null) : cellText(v);
+        return cell(v);
       })
     )
   };
+}
+export function parseJson(text: string): TableData {
+  text = text.replace(/^\uFEFF/, '');
+  // 在 JSON.parse 转成 Number 之前保留超出安全范围的原文，避免大整数被静默舍入。
+  let start = 0;
+  const parts: string[] = [];
+  visit(
+    text,
+    {
+      onLiteralValue(value, offset, length) {
+        if (typeof value !== 'number' || (Number.isFinite(value) && (!Number.isInteger(value) || Number.isSafeInteger(value)))) return;
+        parts.push(text.slice(start, offset), JSON.stringify(text.slice(offset, offset + length)));
+        start = offset + length;
+      },
+      onError() {
+        throw new Error('JSON 格式不完整，请检查引号、逗号和括号。');
+      }
+    },
+    { disallowComments: true }
+  );
+  parts.push(text.slice(start));
+  return fromJson(JSON.parse(parts.join('')));
 }
 export function parseCsv(text: string, opts: ParseOptions = dataDefaults): TableData {
   const result = Papa.parse<string[]>(text.replace(/^\uFEFF/, ''), {

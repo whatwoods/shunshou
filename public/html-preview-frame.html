@@ -1,13 +1,13 @@
 <!doctype html>
 <!--
-  HTML 预览专用的隔离页（安全预览和运行脚本两种模式都用它）。
+  HTML 预览专用的隔离页。
   它在 sandbox="allow-scripts"（没有 allow-same-origin）的 iframe 里打开，是一个与本站隔离的独立来源，读不到本站的存储和页面。
   用户的 HTML 不直接写进这一页，而是放进这一页里再套的一层 srcdoc iframe：
-  - 里层继承这一页的 CSP：只能运行内联脚本、不能发任何网络请求；
+  - 里层继承这一页的 CSP，且 sandbox 为空，不允许执行用户脚本；
   - 里层每次跳转（改 location、点链接、meta refresh）都要过这一页的 frame-src，它是 'none'，所以哪儿都去不了，
     连本站的地址也不行——网址里夹带的内容不会到达任何服务器；
   - 里层没有 allow-same-origin / allow-popups / allow-forms / allow-top-navigation，也不能让这一页跳转。
-  安全预览时里层的 sandbox 为空，连脚本都不运行。
+  不能给里层加 allow-scripts：部分浏览器忽略 CSP 的 webrtc 指令，用户脚本能绕过 connect-src 发出网络请求。
 -->
 <html lang="zh-CN">
   <head>
@@ -34,7 +34,7 @@
       addEventListener('message', function (e) {
         if (e.source !== parent || !e.data || typeof e.data.html !== 'string') return;
         var f = document.createElement('iframe');
-        f.setAttribute('sandbox', e.data.scripts === true ? 'allow-scripts' : '');
+        f.setAttribute('sandbox', '');
         f.setAttribute('referrerpolicy', 'no-referrer');
         f.title = '预览';
         f.srcdoc = e.data.html;

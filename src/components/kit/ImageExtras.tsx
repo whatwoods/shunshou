@@ -7,7 +7,8 @@ import { NextSteps } from '../FileMatch';
 import { toast } from '../Toast';
 import { useHandOff } from '../../lib/useHandOff';
 import { useFileDrop } from '../../lib/useFileDrop';
-import { usePersisted } from '../../lib/settings';
+import { usePersisted, useSettingsLock } from '../../lib/settings';
+import { isAnimated } from '../../lib/image/animated';
 import { useShortcuts } from '../../lib/useShortcuts';
 import { toolById } from '../../tools';
 import { pickFiles, saveBlob, copyText, fmtSize } from '../../lib/files';
@@ -16,7 +17,7 @@ import './ImageWorkbench.css';
 import './ImageExtras.css';
 
 type Color = { hex: string; rgb: string; alpha?: number };
-type Item = { id: string; file: File; url: string };
+type Item = { id: string; file: File; url: string; animated?: boolean };
 type Output = { blob: Blob; preview?: Blob; colors?: Color[]; width: number; height: number; url: string; previewUrl?: string };
 
 export function ImageExtras({ mode }: { mode: 'stitch' | 'palette' }) {
@@ -37,6 +38,10 @@ export function ImageExtras({ mode }: { mode: 'stitch' | 'palette' }) {
   busyRef.current = busy;
   itemsRef.current = items;
   outputRef.current = output;
+  useSettingsLock(busy);
+  const signature = JSON.stringify([items.map((item) => item.id), settings, count]);
+  const live = useRef(signature);
+  live.current = signature;
   useEffect(() => {
     alive.current = true;
     return () => {
@@ -61,6 +66,10 @@ export function ImageExtras({ mode }: { mode: 'stitch' | 'palette' }) {
     }
     const next = selected.map((file) => ({ id: crypto.randomUUID(), file, url: URL.createObjectURL(file) }));
     setItems((old) => [...old, ...next]);
+    for (const item of next)
+      void isAnimated(item.file)
+        .then((yes) => yes && alive.current && setItems((old) => old.map((i) => (i.id === item.id ? { ...i, animated: true } : i))))
+        .catch(() => {});
   }, []);
   useHandOff(add);
   const dragging = useFileDrop(add);
@@ -75,7 +84,7 @@ export function ImageExtras({ mode }: { mode: 'stitch' | 'palette' }) {
     outputRef.current = undefined;
     setOutput(undefined);
     setPicked(undefined);
-  }, [items, settings, count]);
+  }, [signature]);
   const update = (s: Partial<StitchSettings>) => setSettings((old) => ({ ...old, ...s }));
   const reorder = (id: string, to: number) =>
     setItems((old) => {
@@ -91,6 +100,7 @@ export function ImageExtras({ mode }: { mode: 'stitch' | 'palette' }) {
     busyRef.current = true;
     setBusy(true);
     setError('');
+    const at = signature;
     const w = new Worker(new URL('../../lib/image/extras-worker.ts', import.meta.url), { type: 'module' });
     worker.current = w;
     w.onmessage = (e) => {
@@ -98,6 +108,7 @@ export function ImageExtras({ mode }: { mode: 'stitch' | 'palette' }) {
       busyRef.current = false;
       setBusy(false);
       w.terminate();
+      if (live.current !== at) return;
       if (!e.data.ok) {
         setError(e.data.error);
         return;
@@ -241,6 +252,11 @@ export function ImageExtras({ mode }: { mode: 'stitch' | 'palette' }) {
                 {error}
               </p>
             )}
+            {(mode === 'palette' ? items.slice(0, 1) : items).some((i) => i.animated) && (
+              <p className="image-kit-warn" role="status">
+                动图只处理第一帧，导出静态图。
+              </p>
+            )}
             {mode === 'stitch' && output && !busy && <NextSteps outputs={[{ blob: output.blob, name: outName }]} from="image-stitch" />}
           </section>
         )}
@@ -344,7 +360,10 @@ export function ImageExtras({ mode }: { mode: 'stitch' | 'palette' }) {
                           {mode === 'stitch' ? `${index + 1}. ` : ''}
                           {i.file.name}
                         </span>
-                        <small>{fmtSize(i.file.size)}</small>
+                        <small>
+                          {fmtSize(i.file.size)}
+                          {i.animated && ' · 动图只处理第一帧'}
+                        </small>
                       </span>
                     </span>
                     {mode === 'stitch' && (

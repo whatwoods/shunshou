@@ -2,7 +2,7 @@ import {
   chartPoints,
   cleanTable,
   dataDefaults,
-  fromJson,
+  parseJson,
   parseCsv,
   numericColumns,
   recommendChart,
@@ -69,7 +69,7 @@ self.onmessage = async (event: MessageEvent<Request & { id: number }>) => {
       cleanedTable = undefined;
       value = summary();
     } else if (req.action === 'text') {
-      tables = { 数据: req.format === 'json' ? fromJson(JSON.parse(req.text)) : parseCsv(req.text, req.options) };
+      tables = { 数据: req.format === 'json' ? parseJson(req.text) : parseCsv(req.text, req.options) };
       cached = undefined;
       cleanedTable = undefined;
       value = summary();

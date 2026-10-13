@@ -1,5 +1,5 @@
 import Papa from 'papaparse';
-import { dataDefaults, fromJson, fromRows, uniqueColumns, type ParseOptions, type TableData } from './dataCore';
+import { dataDefaults, fromJson, fromRows, parseJson, uniqueColumns, type ParseOptions, type TableData } from './dataCore';
 
 export async function detectEncoding(file: Blob): Promise<string> {
   const bytes = new Uint8Array(await file.slice(0, 65536).arrayBuffer());
@@ -114,6 +114,6 @@ export async function readFileTables(
     });
     return { 数据: fromJson(rows) };
   }
-  if (/\.json$/i.test(file.name)) return { 数据: fromJson(JSON.parse(await file.text())) };
+  if (/\.json$/i.test(file.name)) return { 数据: parseJson(await file.text()) };
   return { 数据: await readCsv(file, options, progress) };
 }

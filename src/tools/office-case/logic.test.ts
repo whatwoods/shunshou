@@ -5,3 +5,7 @@ it('preserves batch lines and recognizes acronyms', () => {
   expect(convert('hello. WORLD!', 'sentence')).toBe('Hello. World!');
   expect(convert('hello_world', 'camel')).toBe('helloWorld');
 });
+it('handles CR-only line breaks and capitalizes indented sentences', () => {
+  expect(convert('first name\rlast name\r\nuser id', 'snake')).toBe('first_name\nlast_name\nuser_id');
+  expect(convert('  hELLO. WORLD!\r\tSECOND LINE.', 'sentence')).toBe('  Hello. World!\n\tSecond line.');
+});

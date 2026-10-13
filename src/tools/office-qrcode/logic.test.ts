@@ -6,6 +6,10 @@ it('escapes Wi-Fi delimiters', () => {
   expect(wifi('a;b', 'p:q', 'WPA', true)).toBe('WIFI:T:WPA;S:a\\;b;P:p\\:q;H:true;;');
   expect(() => wifi('', '', 'WPA', false)).toThrow();
 });
+it('does not embed a previous password in an open-network QR code', () => {
+  expect(wifi('Guest', 'private-password', 'nopass', false)).toBe('WIFI:T:nopass;S:Guest;P:;H:false;;');
+  expect(() => wifi('Guest', '', 'WPA;P:injected', false)).toThrow('加密方式');
+});
 it('rejects indistinguishable colors', () => expect(() => validColors('#ffffff', '#FFFFFF')).toThrow());
 it('round trips unicode QR content', () => {
   const text = '顺手 https://example.com/?a=你好';

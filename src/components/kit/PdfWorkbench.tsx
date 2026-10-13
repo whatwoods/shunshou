@@ -26,6 +26,7 @@ import { useHandOff } from '../../lib/useHandOff';
 import { toast } from '../Toast';
 import { useFileDrop } from '../../lib/useFileDrop';
 import { PdfClient } from '../../lib/pdf/client';
+import { isAnimated } from '../../lib/image/animated';
 import { moveItem, pageGroups } from '../../lib/pdf/logic';
 import { PDF_DEFAULTS, type PdfMode, type PdfOutput, type PdfPageItem, type PdfSettings, type PdfSource } from '../../lib/pdf/types';
 import './PdfWorkbench.css';
@@ -161,6 +162,7 @@ export function PdfWorkbench({ mode }: { mode: PdfMode }) {
           if (mode === 'from-image' ? isPdf : !images && !isPdf)
             throw new Error(mode === 'from-image' ? '请选择图片文件' : '请选择 PDF 文件');
           const source = await clientRef.current.request<PdfSource>({ op: 'load', id: crypto.randomUUID(), file });
+          if (source.image) source.animated = await isAnimated(file).catch(() => false);
           nextSources.push(source);
           nextPages.push(
             ...Array.from({ length: source.count }, (_, index) => ({ id: crypto.randomUUID(), source: source.id, index, rotation: 0 }))
@@ -366,6 +368,11 @@ export function PdfWorkbench({ mode }: { mode: PdfMode }) {
         {error && (
           <p role="alert" className="pdf-error">
             {error}
+          </p>
+        )}
+        {activeSources.some((source) => source.animated) && (
+          <p className="pdf-warning" role="status">
+            动图只保留第一帧。
           </p>
         )}
         {/* 没有文件时版式不变：拖放区占页面区的位置，右边的设置可以先选好 */}
@@ -703,6 +710,7 @@ export function PdfWorkbench({ mode }: { mode: PdfMode }) {
                       <span title={source.name}>{source.name}</span>
                       <small>
                         {source.count} 页 · {fmtSize(source.size)}
+                        {source.animated && ' · 动图只保留第一帧'}
                       </small>
                     </div>
                   ))}

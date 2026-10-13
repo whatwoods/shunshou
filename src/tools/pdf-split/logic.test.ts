@@ -7,6 +7,10 @@ describe('PDF page groups', () => {
       [5, 6, 7]
     ]));
   it('handles Chinese separators and empty range', () => {
+    expect(pageGroups(8, 'ranges', '1-3，5；6-8', 2)).toEqual([
+      [0, 1, 2, 4],
+      [5, 6, 7]
+    ]);
     expect(pageGroups(4, 'ranges', '1-2；3-4', 2)).toEqual([
       [0, 1],
       [2, 3]

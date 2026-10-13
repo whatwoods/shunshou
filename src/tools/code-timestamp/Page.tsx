@@ -3,7 +3,7 @@ import { ToolPage } from '../../components/ToolPage';
 import { Led, SegField } from '../../components/ui';
 import { CodeExtraResult } from '../../components/kit/CodeExtraResult';
 import { toolById } from '../../tools';
-import { usePersisted } from '../../lib/settings';
+import { usePersisted, useSettingsLock } from '../../lib/settings';
 import type { Disambiguation, formatTime } from './logic';
 import '../../components/kit/CodeExtra.css';
 import { Select } from '../../components/Select';
@@ -46,6 +46,7 @@ export default function Page() {
   }, []);
   const result = value;
   const [busy, setBusy] = useState(false);
+  useSettingsLock(busy);
   async function convert(mode: 'timestamp' | 'date') {
     const at = sig;
     setBusy(true);
@@ -122,6 +123,7 @@ export default function Page() {
               </Select>
             </label>
             <SegField
+              disabled={busy}
               label="夏令时冲突时"
               value={settings.disambiguation}
               onChange={(disambiguation) => setSettings({ ...settings, disambiguation })}
@@ -154,6 +156,7 @@ export default function Page() {
                 />
               </label>
               <SegField
+                disabled={busy}
                 label="单位"
                 value={settings.unit}
                 onChange={(unit) => {

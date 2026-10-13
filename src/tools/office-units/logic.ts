@@ -60,7 +60,9 @@ export function convert(value: number, from: Unit, to: Unit) {
   if (!Number.isFinite(value)) throw new Error('请输入有效数字');
   const base = value * from.factor + (from.offset || 0);
   if (units['温度'].includes(from) && base < -1e-10) throw new Error('温度不能低于绝对零度');
-  const result = (base - (to.offset || 0)) / to.factor;
+  if (from === to) return value;
+  // 没有温标偏移时先求比例，避免合法的大数在换到基准单位时溢出。
+  const result = from.offset || to.offset ? (base - (to.offset || 0)) / to.factor : value * (from.factor / to.factor);
   if (!Number.isFinite(result)) throw new Error('数值过大，请缩小后重试');
   return result;
 }

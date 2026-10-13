@@ -174,9 +174,11 @@ export default function Page() {
                   <Field label="名称">
                     <input value={ssid} placeholder="必填" onChange={(e) => setSsid(e.target.value)} />
                   </Field>
-                  <Field label="密码">
-                    <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-                  </Field>
+                  {p.security !== 'nopass' && (
+                    <Field label="密码">
+                      <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+                    </Field>
+                  )}
                   <Field div block label="加密方式">
                     <Segmented
                       label="加密方式"

@@ -52,11 +52,12 @@ export function apng(b: Uint8Array): boolean {
 
 // WebP：扩展格式 VP8X 的动画标记位，或者直接出现 ANIM/ANMF 块
 export function webp(b: Uint8Array): boolean {
+  const view = new DataView(b.buffer, b.byteOffset, b.byteLength);
   let p = 12;
   while (p + 8 <= b.length) {
     const type = String.fromCharCode(b[p], b[p + 1], b[p + 2], b[p + 3]);
-    const size = b[p + 4] | (b[p + 5] << 8) | (b[p + 6] << 16) | (b[p + 7] << 24);
-    if (type === 'VP8X') return !!(b[p + 8] & 0x02);
+    const size = view.getUint32(p + 4, true);
+    if (type === 'VP8X') return size >= 10 && p + 18 <= b.length && !!(b[p + 8] & 0x02);
     if (type === 'ANIM' || type === 'ANMF') return true;
     if (type === 'VP8 ' || type === 'VP8L') return false;
     p += 8 + size + (size & 1);

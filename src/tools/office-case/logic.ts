@@ -18,13 +18,13 @@ export function convert(text: string, mode: keyof typeof modes) {
     kebab: kebabCase,
     constant: constantCase,
     title: capitalCase,
-    sentence: (s: string) => s.toLowerCase().replace(/(^|[.!?。！？]\s*)(\p{L})/gu, (_, p, l) => p + l.toUpperCase()),
+    sentence: (s: string) => s.toLowerCase().replace(/(^\s*|[.!?。！？]\s*)(\p{L})/gu, (_, p, l) => p + l.toUpperCase()),
     upper: (s: string) => s.toUpperCase(),
     lower: (s: string) => s.toLowerCase()
   }[mode];
   if (!fn) throw new Error('请选择转换格式');
   return text
-    .split(/\r?\n/)
+    .split(/\r\n?|\n/)
     .map((line) => fn(line))
     .join('\n');
 }

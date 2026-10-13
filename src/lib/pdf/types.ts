@@ -6,6 +6,7 @@ export interface PdfSource {
   size: number;
   count: number;
   image: boolean;
+  animated?: boolean;
 }
 export interface PdfPageItem {
   id: string;

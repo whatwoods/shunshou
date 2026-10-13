@@ -127,7 +127,7 @@ export default function AvWorkbench({ mode }: { mode: AvMode }) {
     });
   });
   // 设置变了（包括“恢复默认”），旧结果就不对应了；正在跑的任务回来时设置已经变了，也不算数
-  const signature = JSON.stringify(settings);
+  const signature = JSON.stringify([settings, start, end]);
   const live = useRef(signature);
   live.current = signature;
   useEffect(() => setResult(undefined), [signature]);
@@ -370,6 +370,7 @@ export default function AvWorkbench({ mode }: { mode: AvMode }) {
                   <button
                     type="button"
                     className="link-btn"
+                    disabled={busy}
                     onClick={() => {
                       setStart(time);
                       setResult(undefined);
@@ -380,6 +381,7 @@ export default function AvWorkbench({ mode }: { mode: AvMode }) {
                   <button
                     type="button"
                     className="link-btn"
+                    disabled={busy}
                     onClick={() => {
                       setEnd(time);
                       setResult(undefined);
@@ -387,7 +389,7 @@ export default function AvWorkbench({ mode }: { mode: AvMode }) {
                   >
                     设为结束
                   </button>
-                  <button type="button" className="link-btn" onClick={playSelection}>
+                  <button type="button" className="link-btn" disabled={busy} onClick={playSelection}>
                     播放选段
                   </button>
                 </div>
@@ -553,7 +555,7 @@ export default function AvWorkbench({ mode }: { mode: AvMode }) {
             </fieldset>
             <p className="group-note">
               {mode === 'gif' && '256 色调色板，先预览再下载，最多 1800 帧。'}
-              {mode === 'compress' && '保留原帧率，音频 128 kbps。体积是估算，画面简单会更小。'}
+              {mode === 'compress' && '最高 60 帧 / 秒，音频 128 kbps。体积是估算，画面简单会更小。'}
               {audioOnly && '处理主音轨。转 WAV 不再损失，但找不回已丢的细节；MP3 为 44.1 kHz、最多双声道。'}
               {mode === 'convert' && '保留原尺寸和帧率，能直接复制就不转码。旋转后请预览确认。'}
               {mode === 'trim' &&

@@ -7,9 +7,26 @@ import { merge, readTemplate } from './merge';
 import { defaultSheetOptions, type Options, type Source } from './plan';
 import { readSource } from './read';
 import { loadSheet, openBook, type Val } from './xlsx';
-import { valText } from './values';
+import { normVal, valText } from './values';
 
 const bytes = async (f: File) => new Uint8Array(await f.arrayBuffer());
+
+it('关键列匹配与去重保留原始数值精度', () => {
+  expect(normVal({ t: 'n', v: 0.00000000001 })).not.toBe(normVal({ t: 'n', v: 0 }));
+  expect(valText({ t: 'n', v: 1.234567890123 })).toBe('1.234567890123');
+});
+it('CSV 汇总读入 UTF-16 和分号分隔符，不吞掉未闭合的引号', async () => {
+  const text = '\uFEFF姓名;城市\r\n小顺;杭州';
+  const bytes = new Uint8Array(text.length * 2);
+  const view = new DataView(bytes.buffer);
+  [...text].forEach((ch, i) => view.setUint16(i * 2, ch.charCodeAt(0), true));
+  const source = await readSource(new File([bytes], '来源.csv'));
+  expect(source.sheets[0].rows.map((row) => row.map(valText))).toEqual([
+    ['姓名', '城市'],
+    ['小顺', '杭州']
+  ]);
+  await expect(readSource(new File(['姓名,城市\n"小顺,杭州'], '未闭合.csv'))).rejects.toThrow(/引号/);
+});
 
 function options(tpl: ReturnType<typeof readTemplate>, patch: Partial<Options> = {}): Options {
   return {

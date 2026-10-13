@@ -5,6 +5,9 @@ export interface DiffRow {
   leftNumber?: number;
   rightNumber?: number;
   changes?: Change[];
+  unchanged?: boolean;
+  leftNoNewline?: boolean;
+  rightNoNewline?: boolean;
 }
 export function compare(left: string, right: string, ignoreWhitespace: boolean): DiffRow[] {
   const chunks = diffLines(left, right, { ignoreWhitespace, timeout: 1800 });
@@ -13,10 +16,13 @@ export function compare(left: string, right: string, ignoreWhitespace: boolean):
   let l = 1,
     r = 1;
   const lines = (s: string) => s.replace(/\n$/, '').split('\n');
+  const leftLines = lines(left),
+    rightLines = lines(right);
   for (let i = 0; i < chunks.length; i++) {
     const c = chunks[i];
     if (!c.added && !c.removed) {
-      for (const line of lines(c.value)) rows.push({ left: line, right: line, leftNumber: l++, rightNumber: r++ });
+      for (let j = 0; j < c.count!; j++)
+        rows.push({ left: leftLines[l - 1], right: rightLines[r - 1], leftNumber: l++, rightNumber: r++, unchanged: true });
     } else if (c.removed) {
       const old = lines(c.value),
         next = chunks[i + 1]?.added ? lines(chunks[++i].value) : [];
@@ -36,5 +42,20 @@ export function compare(left: string, right: string, ignoreWhitespace: boolean):
       for (const line of lines(c.value)) rows.push({ right: line, rightNumber: r++ });
     }
   }
+  for (const row of rows) {
+    if (row.leftNumber === leftLines.length && left && !left.endsWith('\n')) row.leftNoNewline = true;
+    if (row.rightNumber === rightLines.length && right && !right.endsWith('\n')) row.rightNoNewline = true;
+  }
   return rows;
+}
+
+export function exportDiff(rows: DiffRow[]) {
+  return rows
+    .map((row) => {
+      if (row.unchanged) return '  ' + row.left;
+      const side = (text: string | undefined, prefix: string, noNewline?: boolean) =>
+        text === undefined ? [] : [prefix + text, ...(noNewline ? ['\\ 行末无换行'] : [])];
+      return [...side(row.left, '- ', row.leftNoNewline), ...side(row.right, '+ ', row.rightNoNewline)].join('\n');
+    })
+    .join('\n');
 }

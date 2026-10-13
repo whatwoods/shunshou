@@ -24,7 +24,7 @@ export function valText(v: Val | null | undefined): string {
   if (!v) return '';
   if (v.t === 'd') return serialText(v.v);
   if (v.t === 'b') return v.v ? 'TRUE' : 'FALSE';
-  if (v.t === 'n') return String(Math.round(v.v * 1e10) / 1e10);
+  if (v.t === 'n') return String(v.v);
   return v.v;
 }
 

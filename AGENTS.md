@@ -111,7 +111,7 @@
 
 ## 隐私与安全（硬性要求）
 
-- HTML 预览（安全预览和运行脚本都一样）用 `public/html-preview-frame.html`：它在 `sandbox="allow-scripts"`（不加 `allow-same-origin`）的 iframe 里打开，`_headers` 给它单独一套不许联网的 CSP（`default-src 'none'`）；用户的 HTML 放进它里面再套的一层 srcdoc iframe，这样里层的任何跳转都要过这一页的 `frame-src 'none'`，连本站地址也去不了——父页面的 `frame-src 'self'` 拦不住“跳到本站并把内容放进网址”。不要把用户 HTML 直接写进隔离页或父页面，不要给任何一层加 `allow-same-origin`、`allow-popups`、`allow-top-navigation`，也不要放宽它的 CSP。
+- HTML 预览用 `public/html-preview-frame.html`：外层在 `sandbox="allow-scripts"`（不加 `allow-same-origin`）的 iframe 里打开，`_headers` 给它单独一套不许联网的 CSP（`default-src 'none'`）；用户的 HTML 放在它里面再套的一层 srcdoc iframe，内层必须用空 `sandbox`，始终禁用用户脚本。Chrome 会忽略 `webrtc 'block'`，单靠 CSP 无法保证用户脚本不联网，已关闭“运行脚本”模式。内层的跳转由外层 `frame-src 'none'` 限制，连本站地址也去不了。不要把用户 HTML 直接写进隔离页或父页面，不要给任何一层加 `allow-same-origin`、`allow-popups`、`allow-top-navigation`，也不要放宽 CSP。
 - `public/_headers` 里的内容安全策略：`connect-src 'self'`、`script-src 'self' 'wasm-unsafe-eval'`（**没有** `'unsafe-eval'`），`worker-src 'self' blob:`，`img-src 'self' blob: data:`。所以：
   - **不能请求任何外部地址**，也不能从 CDN 加载脚本、字体或 wasm。所有依赖（包括 wasm 文件、字体、语言包）都必须通过 npm 安装、由 Vite 打包到本站。
   - 依赖内部不能用 `eval` / `new Function`。选库时要确认，必要时用 `npm run preview` 验证。

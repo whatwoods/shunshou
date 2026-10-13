@@ -11,7 +11,8 @@ export function pageGroups(count: number, mode: PdfSettings['split'], ranges: st
   }
   if (!ranges.trim()) return [Array.from({ length: count }, (_, i) => i)];
   return ranges
-    .replace(/[，；]/g, ';')
+    .replace(/，/g, ',')
+    .replace(/；/g, ';')
     .split(';')
     .map((part) => {
       if (!part.trim()) throw new Error('分组不能为空，请用分号分隔各份 PDF');

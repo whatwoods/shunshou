@@ -1,6 +1,8 @@
 // 读各人交上来的数据：Excel（xlsx / xls / ods，用 SheetJS 只读值）或 CSV。日期统一成 1900 日期系统的序号
 import type { Source, SourceSheet } from './plan';
 import type { Val } from './xlsx';
+import { readCsv as readCsvTable } from '../../lib/dataReader';
+import { dataDefaults } from '../../lib/dataCore';
 
 let seq = 0;
 
@@ -44,41 +46,16 @@ export async function readSource(file: File): Promise<Source> {
   return { id, name: file.name, sheets };
 }
 
-// CSV：先按 UTF-8 解，出现乱码再按 GB18030（国内 Excel 另存的 CSV 常是这个编码）；值一律当文字，写进模板时再按列转数字
+// CSV 与其他数据工具共用编码和引号解析，值保留为文字，写进模板时再按列转换。
 async function readCsv(file: File): Promise<SourceSheet> {
-  const buf = new Uint8Array(await file.arrayBuffer());
-  let text = new TextDecoder('utf-8').decode(buf);
-  if (text.includes('\uFFFD')) text = new TextDecoder('gb18030').decode(buf);
-  text = text.replace(/^\uFEFF/, '');
-  const delim = /\.tsv$/i.test(file.name) || text.split('\n')[0].split('\t').length > text.split('\n')[0].split(',').length ? '\t' : ',';
-  const rows: (Val | null)[][] = [];
-  let row: (Val | null)[] = [];
-  let field = '';
-  let quoted = false;
-  const push = () => {
-    row.push(field === '' ? null : { t: 's', v: field });
-    field = '';
+  const table = await readCsvTable(file, {
+    ...dataDefaults,
+    header: false,
+    delimiter: /\.tsv$/i.test(file.name) ? '\t' : ''
+  });
+  return {
+    name: file.name.replace(/\.[^.]+$/, ''),
+    rows: table.rows.map((row) => row.map((value) => (value === '' || value == null ? null : { t: 's' as const, v: String(value) }))),
+    merges: []
   };
-  for (let i = 0; i < text.length; i++) {
-    const ch = text[i];
-    if (quoted) {
-      if (ch === '"' && text[i + 1] === '"') {
-        field += '"';
-        i++;
-      } else if (ch === '"') quoted = false;
-      else field += ch;
-    } else if (ch === '"' && field === '') quoted = true;
-    else if (ch === delim) push();
-    else if (ch === '\n' || ch === '\r') {
-      if (ch === '\r' && text[i + 1] === '\n') i++;
-      push();
-      rows.push(row);
-      row = [];
-    } else field += ch;
-  }
-  if (field !== '' || row.length) {
-    push();
-    rows.push(row);
-  }
-  return { name: file.name.replace(/\.[^.]+$/, ''), rows, merges: [] };
 }

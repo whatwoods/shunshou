@@ -13,31 +13,54 @@ import {
 import { countText } from './logic';
 
 // Token 数：常驻一个 Worker（分词表只加载一次），停手 250ms 后再算，只认最新一次的结果
-function useTokens(text: string) {
-  const [state, setState] = useState<{ tokens?: number; busy: boolean; failed: boolean }>({ busy: false, failed: false });
+export function useTokens(text: string) {
+  const [state, setState] = useState<{ text: string; tokens?: number; busy: boolean; failed: boolean }>({
+    text: '',
+    busy: false,
+    failed: false
+  });
   const worker = useRef<Worker | null>(null);
   const latest = useRef(0);
-  useEffect(() => () => worker.current?.terminate(), []);
+  useEffect(
+    () => () => {
+      worker.current?.terminate();
+      worker.current = null;
+    },
+    []
+  );
   useEffect(() => {
     const id = ++latest.current;
     if (!text) {
-      setState({ tokens: 0, busy: false, failed: false });
+      setState({ text, tokens: 0, busy: false, failed: false });
       return;
     }
-    setState((s) => ({ ...s, busy: true }));
+    setState({ text, busy: true, failed: false });
     const timer = setTimeout(() => {
-      if (!worker.current) {
-        worker.current = new Worker(new URL('./token-worker.ts', import.meta.url), { type: 'module' });
-        worker.current.onmessage = (e: MessageEvent<{ id: number; tokens?: number; error?: boolean }>) => {
-          if (e.data.id !== latest.current) return;
-          setState({ tokens: e.data.tokens, busy: false, failed: !!e.data.error });
-        };
+      const fail = () => {
+        worker.current?.terminate();
+        worker.current = null;
+        setState((s) => ({ ...s, tokens: undefined, busy: false, failed: true }));
+      };
+      try {
+        if (!worker.current) {
+          const instance = new Worker(new URL('./token-worker.ts', import.meta.url), { type: 'module' });
+          worker.current = instance;
+          instance.onmessage = (e: MessageEvent<{ id: number; tokens?: number; error?: boolean }>) => {
+            if (worker.current !== instance || e.data.id !== latest.current) return;
+            setState((s) => ({ ...s, tokens: e.data.tokens, busy: false, failed: !!e.data.error }));
+          };
+          instance.onerror = () => {
+            if (worker.current === instance) fail();
+          };
+        }
+        worker.current.postMessage({ id, text });
+      } catch {
+        fail();
       }
-      worker.current.postMessage({ id, text });
     }, 250);
     return () => clearTimeout(timer);
   }, [text]);
-  return state;
+  return state.text === text ? state : { text, tokens: undefined, busy: !!text, failed: false };
 }
 
 const EXAMPLE = `顺手是一组装在浏览器里的小工具。压缩图片、合并 PDF、转换视频，都在你自己的电脑上完成，文件不会上传到任何服务器。

@@ -46,6 +46,12 @@ const RUN: Record<Mode, string> = {
 };
 // 只有这些格式有“画质”可调
 const LOSSY = ['jpeg', 'webp', 'avif'];
+const CROP_PRESETS = [
+  ['1080x1080', '方图 · 1080 × 1080'],
+  ['1080x1440', '小红书 · 1080 × 1440'],
+  ['1080x1350', 'Instagram · 1080 × 1350'],
+  ['1080x1920', '竖屏故事 · 1080 × 1920']
+];
 const lossySource = (f: File) => /jpe?g|webp|avif|heic|heif/i.test(f.type + ' ' + f.name);
 
 // 水印文字是用户内容，不存本机
@@ -72,7 +78,7 @@ export function ImageWorkbench({ mode }: { mode: Mode }) {
 
   const update = (patch: Partial<Settings>) => setSettings((s) => ({ ...s, ...patch }));
   // 设置一改（包括“恢复默认”），已经做好的结果就不对应了：退回待处理，旧结果的地址一并回收
-  const signature = JSON.stringify(settings) + (logo?.name ?? '');
+  const signature = useMemo(() => ({ settings, logo }), [settings, logo]);
   const live = useRef(signature);
   live.current = signature;
   useSettingsLock(busy);
@@ -109,7 +115,7 @@ export function ImageWorkbench({ mode }: { mode: Mode }) {
       setItems((old) => [...old, ...fresh]);
       setSelected((old) => old || fresh[0]?.id || '');
       // 动图（GIF、APNG、动画 WebP）只能处理第一帧：认出来以后在列表和提示里说清楚，不能悄悄变成静态图
-      if (mode !== 'svg')
+      if (mode !== 'svg' && mode !== 'exif')
         for (const f of fresh)
           void isAnimated(f.file)
             .then((yes) => yes && setItems((list) => list.map((i) => (i.id === f.id ? { ...i, animated: true } : i))))
@@ -147,7 +153,16 @@ export function ImageWorkbench({ mode }: { mode: Mode }) {
     w.postMessage({
       mode: 'crop',
       file: item.file,
-      settings: { ...defaults, format: 'png', rotation: settings.rotation, flip: settings.flip }
+      settings: {
+        ...defaults,
+        format: 'png',
+        x: 0,
+        y: 0,
+        cropWidth: 100,
+        cropHeight: 100,
+        rotation: settings.rotation,
+        flip: settings.flip
+      }
     });
     return () => {
       w.terminate();
@@ -272,15 +287,19 @@ export function ImageWorkbench({ mode }: { mode: Mode }) {
       <Slider label={label} min={min} max={max} value={settings[k]} onChange={(v) => update({ [k]: v })} />
     </Field>
   );
-  const selectRatio = (r: number) => {
-    setRatio(r);
-    if (!r) return;
+  useEffect(() => {
+    if (mode !== 'crop' || !ratio) return;
     const w = natural.width,
       h = natural.height;
-    const cw = Math.min(100, (100 * r * h) / w),
-      ch = (cw * w) / h / r;
-    update({ x: (100 - cw) / 2, y: (100 - ch) / 2, cropWidth: cw, cropHeight: ch });
-  };
+    const cw = Math.min(100, (100 * ratio * h) / w),
+      ch = (cw * w) / h / ratio;
+    setSettings((old) => ({ ...old, x: (100 - cw) / 2, y: (100 - ch) / 2, cropWidth: cw, cropHeight: ch }));
+  }, [mode, ratio, natural.width, natural.height, setSettings]);
+  const croppedWidth = Math.max(1, Math.round((Math.min(settings.cropWidth, 100 - settings.x) / 100) * natural.width));
+  const croppedHeight = Math.max(1, Math.round((Math.min(settings.cropHeight, 100 - settings.y) / 100) * natural.height));
+  const cropOutput = settings.cropPixels
+    ? `${settings.cropPixels}x${Math.max(1, Math.round((settings.cropPixels * croppedHeight) / croppedWidth))}`
+    : '';
   // 裁剪框：框里拖是移动，拖角和边是改大小（选了比例时锁定），框外拖是重新画一个
   const drag = useRef<{ kind: CropDrag; start: CropRect; px: number; py: number; id: number } | null>(null);
   const [cropping, setCropping] = useState(false);
@@ -480,7 +499,7 @@ export function ImageWorkbench({ mode }: { mode: Mode }) {
             {mode === 'crop' && (
               <>
                 <Field label="比例">
-                  <Select value={ratio} onChange={(e) => selectRatio(Number(e.target.value))}>
+                  <Select value={ratio} onChange={(e) => setRatio(Number(e.target.value))}>
                     <option value={0}>自由裁剪</option>
                     <option value={1}>1:1 · 头像 / 方图</option>
                     <option value={4 / 3}>4:3</option>
@@ -492,20 +511,24 @@ export function ImageWorkbench({ mode }: { mode: Mode }) {
                 </Field>
                 <Field label="导出尺寸">
                   <Select
-                    value={settings.cropPixels ? String(settings.cropPixels) : ''}
+                    value={cropOutput}
                     onChange={(e) => {
                       const [w, h] = e.target.value.split('x').map(Number);
                       if (w && h) {
-                        selectRatio(w / h);
+                        setRatio(w / h);
                         update({ cropPixels: w });
                       } else update({ cropPixels: 0 });
                     }}
                   >
                     <option value="">保持裁剪像素</option>
-                    <option value="1080x1080">方图 · 1080 × 1080</option>
-                    <option value="1080x1440">小红书 · 1080 × 1440</option>
-                    <option value="1080x1350">Instagram · 1080 × 1350</option>
-                    <option value="1080x1920">竖屏故事 · 1080 × 1920</option>
+                    {CROP_PRESETS.map(([value, label]) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                    {cropOutput && !CROP_PRESETS.some(([value]) => value === cropOutput) && (
+                      <option value={cropOutput}>当前比例 · {cropOutput.replace('x', ' × ')}</option>
+                    )}
                   </Select>
                 </Field>
                 <Field div block label="旋转">

@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { bounds, MODELS, toMask, toTensor } from './logic';
+import { applyMask, bounds, MODELS, toMask, toTensor } from './logic';
+
+it('抠图保留原图透明度，并与模型遮罩相乘', () => {
+  const pixels = new Uint8ClampedArray([0, 0, 0, 0, 255, 0, 0, 128, 0, 255, 0, 255]);
+  applyMask(pixels, new Uint8ClampedArray([255, 0, 0, 255, 128, 0, 0, 255, 64, 0, 0, 255]));
+  expect(Array.from(pixels)).toEqual([0, 0, 0, 0, 255, 0, 0, 64, 0, 255, 0, 64]);
+});
 
 describe('toTensor', () => {
   it('按通道排成 NCHW 并归一化', () => {
