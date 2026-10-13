@@ -21,10 +21,6 @@ export function Home() {
   const t = search.get('tab');
   const tab: MobileTab = t === 'recent' || t === 'starred' ? t : 'tools';
 
-  useEffect(() => {
-    document.title = '顺手 · 顺手的小工具，全在浏览器里';
-  }, []);
-
   // 手机上是设计稿里的 App 式首页；平板和电脑是完整的长页面
   return phone ? <MobileHome tab={tab} cat={cat} /> : <DesktopHome initialCat={cat} />;
 }
@@ -210,7 +206,9 @@ function DesktopHome({ initialCat }: { initialCat: CatId | null }) {
             <section key={g.id} className="tool-group reveal" aria-labelledby={`cat-${g.id}`}>
               <div className="tool-group-head">
                 <span className="led" style={{ background: g.led, boxShadow: `0 0 6px ${g.led}99` }} aria-hidden="true" />
-                <h3 id={`cat-${g.id}`}>{g.name}</h3>
+                <h3 id={`cat-${g.id}`}>
+                  <Link to={`/${g.id}`}>{g.name}</Link>
+                </h3>
                 <span>{g.blurb}</span>
               </div>
               <div className="tool-grid">
@@ -307,7 +305,8 @@ function DesktopHome({ initialCat }: { initialCat: CatId | null }) {
         <div className="wrap">
           <span>顺手 · 把小事做顺手</span>
           <nav aria-label="页脚">
-            <a href="#privacy">隐私</a>
+            <Link to="/about">关于顺手</Link>
+            <Link to="/privacy">隐私说明</Link>
             <Link to="/licenses">开源许可</Link>
             {site.repoUrl && <a href={site.repoUrl}>源代码</a>}
             {site.repoUrl && <a href={site.repoUrl + '/issues'}>提需求</a>}

@@ -2,6 +2,9 @@ import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
+import { seoPages } from './scripts/seo.ts';
+
+const seo = { routes: ['/'] };
 
 // 构建时生成 sw.js：只预缓存首页要用的入口脚本、样式和图标；各工具的分包、wasm、字体在第一次用到时再缓存
 function serviceWorker(): Plugin {
@@ -26,8 +29,9 @@ function serviceWorker(): Plugin {
       const precache = ['/', '/favicon.svg', '/manifest.webmanifest', '/theme.js', ...[...shell].sort().map((f) => '/' + f)];
       // 带哈希的文件名变了版本就变；index.html 和 public 里不带哈希的文件要把内容也算进去
       const hash = createHash('sha256').update(precache.join('\n'));
-      const html = bundle['index.html'];
-      if (html?.type === 'asset') hash.update(html.source);
+      for (const [file, item] of Object.entries(bundle).sort(([a], [b]) => a.localeCompare(b))) {
+        if (item.type === 'asset' && file.endsWith('.html')) hash.update(file).update(item.source);
+      }
       for (const f of ['favicon.svg', 'manifest.webmanifest', 'theme.js'])
         hash.update(readFileSync(new URL('./public/' + f, import.meta.url)));
       const version = hash.digest('hex').slice(0, 10);
@@ -39,6 +43,7 @@ function serviceWorker(): Plugin {
       const source = readFileSync(new URL('./scripts/sw.template.js', import.meta.url), 'utf8')
         .replace('__VERSION__', version)
         .replace('__PRECACHE__', JSON.stringify(precache))
+        .replace('__ROUTES__', JSON.stringify(seo.routes))
         .replace('__ASSETS__', JSON.stringify(assets));
       this.emitFile({ type: 'asset', fileName: 'sw.js', source });
     }
@@ -46,7 +51,7 @@ function serviceWorker(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [react(), serviceWorker()],
+  plugins: [react(), seoPages(seo), serviceWorker()],
   worker: { format: 'es' },
   resolve: {
     alias: {

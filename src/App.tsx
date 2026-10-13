@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState, type ComponentType } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ComponentType } from 'react';
 import { Link, usePath } from './router';
 import { PAGE_LOADERS, POPULAR, prefetchTool, toolByPath } from './tools';
 import { Home } from './pages/Home';
@@ -9,6 +9,10 @@ import { CommandPalette } from './components/CommandPalette';
 import { Toaster } from './components/Toast';
 import { CheckLens } from './components/Lens';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { PageHead } from './seo/PageHead';
+import { categoryByPath, normalizePath } from './seo/metadata';
+
+const ContentPage = lazy(() => import('./pages/ContentPage'));
 
 // 每个工具单独打包，首页不用加载工具代码
 const PAGES = Object.fromEntries(
@@ -16,9 +20,6 @@ const PAGES = Object.fromEntries(
 );
 
 function NotFound() {
-  useEffect(() => {
-    document.title = '找不到页面 · 顺手';
-  }, []);
   return (
     <div className="tool-page">
       <Nav />
@@ -32,8 +33,9 @@ function NotFound() {
   );
 }
 
-export function App() {
-  const path = usePath();
+export function App({ initialContent = '' }: { initialContent?: string }) {
+  const path = normalizePath(usePath());
+  const firstPath = useRef(path);
   const [palette, setPalette] = useState<'closed' | 'open' | 'closing'>('closed');
   const open = useCallback(() => setPalette('open'), []);
   const close = useCallback(() => {
@@ -82,6 +84,8 @@ export function App() {
   let page;
   if (path === '/') {
     page = <Home />;
+  } else if (categoryByPath(path) || path === '/about' || path === '/privacy') {
+    page = <ContentPage path={path} />;
   } else if (path === '/licenses') {
     page = <Licenses />;
   } else {
@@ -92,15 +96,21 @@ export function App() {
 
   return (
     <PaletteContext.Provider value={ctx}>
+      <PageHead path={path} />
       <ErrorBoundary resetKey={path}>
         <Suspense
           fallback={
-            <div className="tool-page">
-              <Nav />
-              <div className="page-loading" aria-label="正在打开">
-                <span className="led" />
+            initialContent && path === firstPath.current ? (
+              // 来自本站构建的 HTML，保留到首个工具分包就绪，避免慢网时正文消失。
+              <div dangerouslySetInnerHTML={{ __html: initialContent }} />
+            ) : (
+              <div className="tool-page">
+                <Nav />
+                <div className="page-loading" aria-label="正在打开">
+                  <span className="led" />
+                </div>
               </div>
-            </div>
+            )
           }
         >
           {page}

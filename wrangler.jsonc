@@ -5,7 +5,8 @@
   "compatibility_date": "2026-10-01",
   "assets": {
     "directory": "./dist",
-    // 前端路由：找不到的路径都回到 index.html
-    "not_found_handling": "single-page-application"
+    // 构建时为每个公开路由输出 HTML；未知地址返回真正的 404
+    "not_found_handling": "404-page",
+    "html_handling": "drop-trailing-slash"
   }
 }

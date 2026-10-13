@@ -3,6 +3,7 @@ const VERSION = '__VERSION__';
 const PRECACHE = __PRECACHE__;
 // 当前版本的全部带哈希文件，旧版本留下的分包在激活时删掉，缓存不会越积越多
 const CURRENT = new Set(__ASSETS__);
+const ROUTES = new Set(__ROUTES__);
 const SHELL = 'shunshou-shell-' + VERSION;
 const ASSETS = 'shunshou-assets';
 
@@ -30,20 +31,30 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
 
-  // 页面：优先联网拿最新版本，断网时用缓存
-  // 所有路由都是同一个 index.html，统一存成 '/'；iframe 里打开的独立页面（HTML 预览的隔离页）按自己的路径存
+  // 预渲染页面按路径分别缓存；查询参数只控制界面状态，不改变 HTML。
+  // 只有已知的应用路由能在离线时借用首页壳，独立页面和 iframe 必须保持隔离。
   if (req.mode === 'navigate') {
-    const key = req.destination === 'iframe' ? url.pathname : '/';
+    const path = url.pathname.replace(/\/+$/, '') || '/';
+    const appRoute = req.destination !== 'iframe' && ROUTES.has(path);
+    const key = appRoute ? path : url.pathname;
     event.respondWith(
       fetch(req)
         .then((res) => {
           if (res.ok && !res.redirected) {
             const copy = res.clone();
-            caches.open(SHELL).then((c) => c.put(key, copy));
+            event.waitUntil(
+              caches
+                .open(SHELL)
+                .then((c) => c.put(key, copy))
+                .catch(() => {})
+            );
           }
           return res;
         })
-        .catch(() => caches.match(key))
+        .catch(async () => {
+          const cache = await caches.open(SHELL);
+          return (await cache.match(key)) || (appRoute && (await cache.match('/'))) || Response.error();
+        })
     );
     return;
   }

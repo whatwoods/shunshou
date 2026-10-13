@@ -72,7 +72,7 @@ Worker 的名字在 `wrangler.jsonc` 里，默认是 `shunshou`。`public/_heade
 
 1. 所有页面：`Content-Security-Policy`（`connect-src 'self'`、`script-src 'self' 'wasm-unsafe-eval'` 等，照抄 `_headers` 第一段）、`X-Content-Type-Options`、`Referrer-Policy`、`Permissions-Policy`。
 2. `/html-preview-frame` 和 `/html-preview-frame.html`：**换成**单独的那套策略（`default-src 'none'` 开头），不是在第一套上追加。
-3. 找不到的路径回退到 `index.html`（单页应用）。
+3. `/image/compress` 这类无扩展名路径读取对应的 `/image/compress.html`；带 `.html` 或尾斜杠的地址跳转到无尾斜杠版本。未知路径返回 `404.html` 和 HTTP 404，不要统一回退到首页。
 
 部署后检查一下响应头：
 
@@ -88,7 +88,23 @@ curl -sI https://你的域名/html-preview-frame | grep -i content-security-poli
 
 ## 自定义
 
-`src/site.ts` 里填上仓库地址后，页脚会出现“源代码”“提需求”，首页部署说明也会显示真实的 `git clone` 地址。
+`src/site.ts` 里配置仓库地址和正式站点地址。自行部署到其他域名时，在 `.env.production` 设置 `VITE_SITE_URL=https://你的域名`，再构建部署；这个值必须是 HTTPS 根地址，不带路径、查询参数或账号信息。它会同时用于 canonical、分享链接、结构化数据和站点地图。未设置时使用本项目 README 顶部的在线地址。
+
+填上仓库地址后，页脚会出现“源代码”“提需求”，首页部署说明也会显示真实的 `git clone` 地址。
+
+## 搜索与 AI 搜索
+
+`npm run build` 会根据已上线工具清单生成每个工具、6 个分类、关于、隐私和许可页面的 HTML，同时生成 `sitemap.xml`、`robots.txt` 和 `llms.txt`。首次响应就包含标题、描述、规范地址、分享信息、JSON-LD、可见说明和链接；浏览器加载后继续使用原有交互工具。不同爬虫和用户收到相同的页面。
+
+- 元信息：`src/seo/metadata.ts`。未上线工具和错误页使用 `noindex`，不进站点地图；筛选和收藏等查询参数不产生新的索引地址。
+- 工具说明：`src/seo/guides-media.ts`、`guides-text.ts`。新增工具或修改功能后同步维护能力、步骤、限制和相关工具，单元测试会检查所有已上线工具都有说明。
+- 隐私与站点说明：`src/seo/Content.tsx`。静态页面和交互页面共用内容，不添加评分、虚构评价或隐藏关键词。
+- `llms.txt` 是同源纯文本目录，作为补充资料；它不是排名或 AI 引用保证，也不替代 HTML、链接和站点地图。不填写无法准确追踪的 `lastmod`。
+- `robots.txt` 允许抓取公开资源；隔离预览页通过 `X-Robots-Tag: noindex` 排除。Cloudflare 控制台中的 WAF、AI 爬虫规则或访问验证也可能阻挡抓取，部署者需核对，仓库不能替控制台配置。
+
+上线后，在 Google Search Console 和 Bing Webmaster Tools 验证自己的域名并提交 `/sitemap.xml`，用 URL 检查工具确认首次 HTML 与渲染结果。观察索引数量、有效访问和 Bing 的 AI Performance；收录、排名和 AI 引用由搜索服务决定。没有加入统计脚本。
+
+依据：[Google 的 AI 搜索说明](https://developers.google.com/search/docs/appearance/ai-features)、[JavaScript SEO](https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics)、[Bing 网站指南](https://www.bing.com/webmasters/help/bing-webmaster-guidelines-30fba23a)、[OpenAI 抓取说明](https://developers.openai.com/api/docs/bots)、[Cloudflare 静态站点路由](https://developers.cloudflare.com/workers/static-assets/routing/static-site-generation/)。
 
 ## 许可
 

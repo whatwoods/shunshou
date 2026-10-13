@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { Nav } from '../components/Nav';
 import { Link } from '../router';
 
@@ -68,47 +67,50 @@ const PARTS: { name: string; version: string; use: string; license: string; text
 ];
 
 export function Licenses() {
-  useEffect(() => {
-    document.title = '开源许可 · 顺手';
-  }, []);
   return (
     <div className="tool-page">
       <Nav />
-      <main className="tool-main licenses">
-        <h1>开源许可</h1>
-        <p className="licenses-lead">
-          顺手用到了下面这些开源组件，感谢它们的作者。其余依赖是 MIT、BSD、Apache、ISC 这类宽松许可，声明保留在打包后的代码里。
-        </p>
-        <div className="licenses-list">
-          {PARTS.map((p) => (
-            <section key={p.name} className="licenses-item">
-              <h2>
-                {p.name} <small>{p.version}</small>
-              </h2>
-              <p>{p.use}</p>
-              <p className="licenses-meta">
-                <span>{p.license}</span>
-                {p.texts.map(([label, href]) => (
-                  <a key={href} href={href} target="_blank" rel="noreferrer">
-                    {label}
-                  </a>
-                ))}
-                <a href={p.source} target="_blank" rel="noreferrer">
-                  源代码
-                </a>
-              </p>
-            </section>
-          ))}
-        </div>
-        <p className="licenses-note">
-          LGPL 组件都是原样使用、单独加载的：可以用对应版本的源代码按上游说明重新编译，替换网站里同名的文件。LGPL-3.0 是在 GNU GPL 第 3
-          版上加的补充条款，所以两份全文都附在上面。
-        </p>
-        <p className="licenses-note">
-          <Link to="/">‹ 回到首页</Link>
-        </p>
-      </main>
+      <LicenseContent />
       <footer className="tool-foot">顺手 · 文件只在你的设备上处理</footer>
     </div>
+  );
+}
+
+export function LicenseContent() {
+  return (
+    <main className="tool-main licenses">
+      <h1>开源许可</h1>
+      <p className="licenses-lead">
+        顺手用到了下面这些开源组件，感谢它们的作者。其余依赖是 MIT、BSD、Apache、ISC 这类宽松许可，声明保留在打包后的代码里。
+      </p>
+      <div className="licenses-list">
+        {PARTS.map((p) => (
+          <section key={p.name} className="licenses-item">
+            <h2>
+              {p.name} <small>{p.version}</small>
+            </h2>
+            <p>{p.use}</p>
+            <p className="licenses-meta">
+              <span>{p.license}</span>
+              {p.texts.map(([label, href]) => (
+                <a key={href} href={href} target="_blank" rel="noreferrer">
+                  {label}
+                </a>
+              ))}
+              <a href={p.source} target="_blank" rel="noreferrer">
+                源代码
+              </a>
+            </p>
+          </section>
+        ))}
+      </div>
+      <p className="licenses-note">
+        LGPL 组件都是原样使用、单独加载的：可以用对应版本的源代码按上游说明重新编译，替换网站里同名的文件。LGPL-3.0 是在 GNU GPL 第 3
+        版上加的补充条款，所以两份全文都附在上面。
+      </p>
+      <p className="licenses-note">
+        <Link to="/">‹ 回到首页</Link>
+      </p>
+    </main>
   );
 }

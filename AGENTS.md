@@ -26,6 +26,14 @@
    - 如果工具能接收文件，把它加进 `src/lib/match.ts` 里对应文件类型的推荐列表（按常用程度排），首页拖入、手机“打开一个文件”和处理完的“接着用”都会推荐它。
 4. 页面外层用 `ToolPage`：`<ToolPage tool={toolById('pdf-merge')!} sub={…} actions={…}>…</ToolPage>`。它负责导航、面包屑、标题、页脚，以及记录“最近使用”。
 5. 工具私有的样式放在工具文件夹里的 `.css`，在 `Page.tsx` 里 import（会跟着工具一起拆包）。
+6. 在 `src/seo/guides-media.ts` 或 `guides-text.ts` 里补齐工具的真实能力、3 步操作、使用限制和相关工具。说明会同时显示在工具页和构建出的 HTML 中；不要写未经实现验证的格式支持或效果承诺。
+
+## SEO 与静态页面
+
+- `src/seo/metadata.ts` 统一管理路由元信息；页面组件不要再单独写 `document.title`。构建由 `scripts/seo.ts` 在 Service Worker 生成前输出各路由 HTML、站点地图和纯文本目录，工具仍按需加载。
+- `src/site.ts` 的 `url` 或构建变量 `VITE_SITE_URL` 是正式域名的唯一来源。自行部署必须改成自己的 HTTPS 根地址。
+- Cloudflare 使用 `404-page` 和 `drop-trailing-slash`，不使用统一首页回退；未知路径返回 404，未上线工具不进 sitemap。Service Worker 按路由缓存页面，不能再把所有页面写入 `/`。
+- 结构化数据必须对应可见内容，不添加虚构评分、作者或日期，不为 SEO 放宽 CSP。`llms.txt` 只是补充目录，不能当作收录保证。
 
 参考实现：`src/tools/image-compress/`（Worker 池、拖放、对比视图、批量下载）。
 

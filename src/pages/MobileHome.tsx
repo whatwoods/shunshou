@@ -275,6 +275,12 @@ export function MobileHome({ tab, cat }: { tab: MobileTab; cat: CatId | null }) 
       <main className="m-main" key={cat ?? tab}>
         {body}
       </main>
+      <div className="m-main">
+        <nav className="guide-links" aria-label="站点说明">
+          <Link to="/about">关于顺手</Link>
+          <Link to="/privacy">隐私说明</Link>
+        </nav>
+      </div>
       <TabBar tab={cat ? 'tools' : tab} />
       {picked && <DropAnywhere files={picked} onClose={() => setPicked(null)} />}
     </div>

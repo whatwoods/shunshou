@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, type ReactNode } from 'react';
 import { Link, navigate } from '../router';
 import { categoryOf, type Tool } from '../tools';
 import { pushRecent, toggleStar, useLocalLists } from '../lib/store';
@@ -8,6 +8,8 @@ import { CatNav, usePalette } from './Nav';
 import { PhoneBar } from './PhoneBar';
 import { toast } from './Toast';
 import { ResetIcon, SearchIcon, StarIcon } from './ui';
+
+const ToolGuide = lazy(() => import('../seo/ToolGuide'));
 
 export function ToolPage({ tool, sub, actions, children }: { tool: Tool; sub?: ReactNode; actions?: ReactNode; children: ReactNode }) {
   const cat = categoryOf(tool.cat);
@@ -20,7 +22,6 @@ export function ToolPage({ tool, sub, actions, children }: { tool: Tool; sub?: R
   const palette = usePalette();
 
   useEffect(() => {
-    document.title = `${tool.name} · 顺手`;
     if (tool.ready) pushRecent(tool.id);
   }, [tool]);
 
@@ -60,7 +61,7 @@ export function ToolPage({ tool, sub, actions, children }: { tool: Tool; sub?: R
           <div className="titles">
             {!phone && (
               <p className="crumb">
-                <Link to={`/?cat=${cat.id}#tools`}>{cat.name}</Link> <span aria-hidden="true">›</span>
+                <Link to={`/${cat.id}`}>{cat.name}</Link> <span aria-hidden="true">›</span>
               </p>
             )}
             <div className="tool-title-row">
@@ -89,8 +90,11 @@ export function ToolPage({ tool, sub, actions, children }: { tool: Tool; sub?: R
         </div>
         {children}
       </main>
+      <Suspense fallback={null}>
+        <ToolGuide tool={tool} />
+      </Suspense>
       <footer className="tool-foot">
-        顺手 · 文件只在你的设备上处理 · <Link to="/licenses">开源许可</Link>
+        顺手 · <Link to="/about">关于顺手</Link> · <Link to="/privacy">隐私说明</Link> · <Link to="/licenses">开源许可</Link>
       </footer>
     </div>
   );

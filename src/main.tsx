@@ -4,12 +4,15 @@ import { App } from './App';
 import { forgetLegacyContent } from './lib/store';
 import { toast } from './components/Toast';
 import './styles.css';
+import './seo/seo.css';
 
 forgetLegacyContent();
 
-createRoot(document.getElementById('root')!).render(
+const root = document.getElementById('root')!;
+const initialContent = root.innerHTML;
+createRoot(root).render(
   <StrictMode>
-    <App />
+    <App initialContent={initialContent} />
   </StrictMode>
 );
 
