@@ -464,6 +464,19 @@ export const RotateIcon = icon(
     <path d="M17.3 2.7v4h-4" />
   </>
 );
+// 撤回 / 重做：一道弯回去的箭头
+export const UndoIcon = icon(
+  <>
+    <path d="M9 14L4 9l5-5" />
+    <path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" />
+  </>
+);
+export const RedoIcon = icon(
+  <>
+    <path d="M15 14l5-5-5-5" />
+    <path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13" />
+  </>
+);
 export const CopyIcon = icon(
   <>
     <rect x="8.5" y="8.5" width="12" height="12" rx="2.5" />

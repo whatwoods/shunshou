@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type PointerEvent } from 'react';
 import { ToolPage } from '../../components/ToolPage';
-import { CloseIcon, DownloadIcon, Field, Led, PlusIcon, Segmented, SwitchRow } from '../../components/ui';
+import { CloseIcon, DownloadIcon, Field, Led, PlusIcon, RedoIcon, Segmented, Slider, SwitchRow, UndoIcon } from '../../components/ui';
 import { DropOverlay, DropZone } from '../../components/DropZone';
 import { ActionBar, KeyHint } from '../../components/ActionBar';
 import { NextSteps } from '../../components/FileMatch';
@@ -11,9 +11,12 @@ import { useFileDrop } from '../../lib/useFileDrop';
 import { useHandOff } from '../../lib/useHandOff';
 import { isAnimated } from '../../lib/image/animated';
 import { usePersisted, useSettingsLock } from '../../lib/settings';
-import { useShortcuts } from '../../lib/useShortcuts';
+import { MOD, useShortcuts } from '../../lib/useShortcuts';
+import { decode } from '../../lib/image/decode';
+import { dragCrop, type CropDrag } from '../../lib/image/crop';
 import { baseName, fmtSize, pickFiles, saveBlob, saveZip } from '../../lib/files';
-import type { ModelId } from './logic';
+import { bounds, type ModelId, type Rect, type Stroke } from './logic';
+import { paintStroke, render } from './paint';
 import '../../components/kit/ImageWorkbench.css';
 import './cutout.css';
 
@@ -29,7 +32,29 @@ interface Item {
   size?: { width: number; height: number };
   error?: string;
   animated?: boolean;
+  // 只在这个范围里抠（百分比）；修整的笔画；撤回 / 重做用的历史
+  range?: Rect;
+  strokes: Stroke[];
+  past: Snap[];
+  future: Snap[];
+  rev: number;
 }
+type Snap = Pick<Item, 'status' | 'cut' | 'cutUrl' | 'box' | 'size' | 'error' | 'range' | 'strokes'>;
+const snap = ({ status, cut, cutUrl, box, size, error, range, strokes }: Item): Snap => ({
+  status,
+  cut,
+  cutUrl,
+  box,
+  size,
+  error,
+  range,
+  strokes
+});
+const UNCUT = { status: 'idle', cut: undefined, cutUrl: undefined, box: undefined, error: undefined } as const;
+const HISTORY = 30;
+const HANDLES = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
+// 结果 / 原图 是看；范围 / 保留 / 擦除 是在图上动手
+type EditMode = 'cut' | 'original' | 'range' | 'keep' | 'erase';
 
 const defaults = {
   model: 'fine' as ModelId,
@@ -37,7 +62,9 @@ const defaults = {
   bg: 'none' as 'none' | 'white' | 'color',
   color: '#E8F0FF',
   trim: false,
-  format: 'png' as 'png' | 'webp' | 'jpeg'
+  format: 'png' as 'png' | 'webp' | 'jpeg',
+  // 笔刷直径：占图片长边的百分比
+  brush: 6
 };
 const MODEL_SIZE: Record<ModelId, string> = { fast: '4.6 MB', fine: '90 MB' };
 const MIME = { png: 'image/png', webp: 'image/webp', jpeg: 'image/jpeg' } as const;
@@ -50,7 +77,7 @@ export default function Page() {
   const [selected, setSelected] = useState('');
   const [busy, setBusy] = useState(false);
   const [stage, setStage] = useState('');
-  const [view, setView] = useState<'cut' | 'original'>('cut');
+  const [editMode, setEditMode] = useState<EditMode>('cut');
   const [exported, setExported] = useState<{ signature: string; files: { blob: Blob; name: string }[] }>();
   const worker = useRef<Worker | null>(null);
   const itemsRef = useRef(items);
@@ -58,16 +85,16 @@ export default function Page() {
   const alive = useRef(true);
   useSettingsLock(busy);
 
-  // 换模型或改边缘清理，已经抠好的就不对应了：退回待处理
+  // 换模型或改边缘清理，已经抠好的就不对应了：退回待处理（旧结果进历史，撤回还能找回来）
   const maskSig = `${s.model}:${s.clean}`;
   const live = useRef(maskSig);
   live.current = maskSig;
   useEffect(() => {
     setItems((list) =>
       list.map((i) => {
-        if (i.status !== 'done' && i.status !== 'error') return i;
-        if (i.cutUrl) URL.revokeObjectURL(i.cutUrl);
-        return { ...i, status: 'idle', cut: undefined, cutUrl: undefined, box: undefined, error: undefined };
+        if (i.status === 'error') return { ...i, ...UNCUT };
+        if (i.status !== 'done') return i;
+        return { ...i, ...UNCUT, past: [...i.past, snap(i)].slice(-HISTORY), future: [], rev: i.rev + 1 };
       })
     );
   }, [maskSig]);
@@ -76,17 +103,23 @@ export default function Page() {
     return () => {
       alive.current = false;
       worker.current?.terminate();
-      itemsRef.current.forEach((i) => {
-        URL.revokeObjectURL(i.url);
-        if (i.cutUrl) URL.revokeObjectURL(i.cutUrl);
-      });
+      itemsRef.current.forEach(revoke);
     };
   }, []);
 
   const add = useCallback((files: File[]) => {
     const ok = files.filter((f) => f.type.startsWith('image/') || /\.(heic|heif|avif|bmp)$/i.test(f.name));
     if (!ok.length && files.length) toast('请选择图片文件', 'error');
-    const fresh = ok.map((file) => ({ id: crypto.randomUUID(), file, url: URL.createObjectURL(file), status: 'idle' as const }));
+    const fresh: Item[] = ok.map((file) => ({
+      id: crypto.randomUUID(),
+      file,
+      url: URL.createObjectURL(file),
+      status: 'idle',
+      strokes: [],
+      past: [],
+      future: [],
+      rev: 0
+    }));
     setItems((old) => [...old, ...fresh]);
     setSelected((old) => old || fresh[0]?.id || '');
     for (const item of fresh)
@@ -100,6 +133,81 @@ export default function Page() {
   const item = items.find((i) => i.id === selected) ?? items[0];
   const done = items.filter((i) => i.status === 'done' && i.cut);
   const finished = items.length > 0 && items.every((i) => i.status === 'done');
+  const hasCut = item?.status === 'done' && !!item.cut && !!item.size;
+  // 还没抠好时只能看原图、框范围
+  const mode: EditMode = hasCut ? editMode : editMode === 'range' ? 'range' : 'original';
+  const brushing = mode === 'keep' || mode === 'erase';
+  const showCanvas = hasCut && (mode === 'cut' || brushing);
+
+  // 改动都走这里：先把当前状态存进历史，再改
+  const commit = (id: string, patch: (i: Item) => Partial<Snap>) =>
+    setItems((list) =>
+      list.map((i) => (i.id === id ? { ...i, ...patch(i), past: [...i.past, snap(i)].slice(-HISTORY), future: [], rev: i.rev + 1 } : i))
+    );
+  const travel = (dir: 'undo' | 'redo') => {
+    if (busy || !item || !(dir === 'undo' ? item.past : item.future).length) return false;
+    setItems((list) =>
+      list.map((i) => {
+        if (i.id !== item.id) return i;
+        const past = [...i.past],
+          future = [...i.future];
+        const to = dir === 'undo' ? past.pop() : future.pop();
+        if (!to) return i;
+        (dir === 'undo' ? future : past).push(snap(i));
+        return { ...i, ...to, past, future, rev: i.rev + 1 };
+      })
+    );
+  };
+  // 改了范围，旧结果就不算数了，等着重抠
+  const setRange = (id: string, range: Rect | undefined) =>
+    commit(id, (i) => ({ range, ...(i.status === 'done' || i.status === 'error' ? UNCUT : {}) }));
+
+  // 预览画布：抠图结果 + 修整笔画。“保留”要从原图取像素，原图按结果的尺寸缓存一份
+  const canvas = useRef<HTMLCanvasElement>(null);
+  const bitmaps = useRef(new WeakMap<Blob, Promise<ImageBitmap>>());
+  const originals = useRef(new Map<string, Promise<HTMLCanvasElement>>());
+  const ready = useRef<HTMLCanvasElement | null>(null);
+  const bitmap = (b: Blob) => {
+    let p = bitmaps.current.get(b);
+    if (!p) bitmaps.current.set(b, (p = createImageBitmap(b)));
+    return p;
+  };
+  const original = (i: Item) => {
+    let p = originals.current.get(i.id);
+    if (!p) {
+      const { width, height } = i.size!;
+      p = decode(i.file).then((bmp) => {
+        const c = document.createElement('canvas');
+        c.width = width;
+        c.height = height;
+        const ctx = c.getContext('2d')!;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(bmp, 0, 0, width, height);
+        bmp.close();
+        return c;
+      });
+      p.catch(() => originals.current.delete(i.id));
+      originals.current.set(i.id, p);
+    }
+    return p;
+  };
+  const needOriginal = mode === 'keep' || !!item?.strokes.some((st) => st.mode === 'keep');
+  useEffect(() => {
+    const c = canvas.current;
+    ready.current = null;
+    if (!showCanvas || !item?.cut || !c) return;
+    let off = false;
+    Promise.all([bitmap(item.cut), needOriginal ? original(item) : null])
+      .then(([b, o]) => {
+        if (off) return;
+        ready.current = o;
+        render(c.getContext('2d')!, b, o, item.strokes);
+      })
+      .catch(() => !off && toast('原图读不出来，“保留”用不了', 'error'));
+    return () => {
+      off = true;
+    };
+  }, [item?.id, item?.cut, item?.strokes, showCanvas, needOriginal]);
 
   function getWorker() {
     if (!worker.current) worker.current = new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' });
@@ -112,6 +220,7 @@ export default function Page() {
     setBusy(true);
     for (const current of itemsRef.current.filter((i) => i.status !== 'done')) {
       if (!alive.current || live.current !== at) break;
+      const before: Snap = { ...snap(current), ...UNCUT };
       setSelected(current.id);
       setItems((list) => list.map((i) => (i.id === current.id ? { ...i, status: 'work', error: undefined } : i)));
       try {
@@ -127,7 +236,7 @@ export default function Page() {
             else reject(new Error(d.error));
           };
           w.onerror = () => reject(new Error('抠图模块没能启动，请刷新重试'));
-          w.postMessage({ id: current.id, file: current.file, model: s.model, clean: s.clean });
+          w.postMessage({ id: current.id, file: current.file, model: s.model, clean: s.clean, range: current.range });
         });
         if (!alive.current) break;
         if (live.current !== at) {
@@ -135,11 +244,25 @@ export default function Page() {
           break;
         }
         const cutUrl = URL.createObjectURL(r.blob);
+        // 抠完也算一步：撤回就回到抠之前，换个范围或效果再抠
         setItems((list) =>
           list.map((i) =>
-            i.id === current.id ? { ...i, status: 'done', cut: r.blob, cutUrl, box: r.box, size: { width: r.width, height: r.height } } : i
+            i.id === current.id
+              ? {
+                  ...i,
+                  status: 'done',
+                  cut: r.blob,
+                  cutUrl,
+                  box: r.box,
+                  size: { width: r.width, height: r.height },
+                  past: [...i.past, before].slice(-HISTORY),
+                  future: [],
+                  rev: i.rev + 1
+                }
+              : i
           )
         );
+        setEditMode('cut');
       } catch (e) {
         // Worker 出错（多半是内存不够）就整个换掉，下一张重新开始
         worker.current?.terminate();
@@ -161,9 +284,24 @@ export default function Page() {
   const ext = format === 'jpeg' ? 'jpg' : format;
   const fileName = (i: Item) => `${baseName(i.file.name)}-抠图.${ext}`;
   async function compose(i: Item): Promise<Blob> {
-    const box = s.trim && i.box ? i.box : { x: 0, y: 0, w: i.size!.width, h: i.size!.height };
-    if (s.bg === 'none' && !s.trim && format === 'png') return i.cut!;
-    const bmp = await createImageBitmap(i.cut!);
+    const { width, height } = i.size!;
+    if (s.bg === 'none' && !s.trim && format === 'png' && !i.strokes.length) return i.cut!;
+    // 先把修整的笔画画上去，主体范围也要按画完的算
+    let src: CanvasImageSource = await bitmap(i.cut!);
+    let box = i.box;
+    if (i.strokes.length) {
+      const full = document.createElement('canvas');
+      full.width = width;
+      full.height = height;
+      const fctx = full.getContext('2d', { willReadFrequently: true })!;
+      render(fctx, src, i.strokes.some((st) => st.mode === 'keep') ? await original(i) : null, i.strokes);
+      if (s.trim) {
+        const a = fctx.getImageData(0, 0, width, height).data;
+        box = bounds((k) => a[k * 4 + 3], width, height);
+      }
+      src = full;
+    }
+    if (!s.trim || !box) box = { x: 0, y: 0, w: width, h: height };
     const c = document.createElement('canvas');
     c.width = box.w;
     c.height = box.h;
@@ -172,8 +310,7 @@ export default function Page() {
       ctx.fillStyle = s.bg === 'white' ? '#ffffff' : s.color;
       ctx.fillRect(0, 0, box.w, box.h);
     }
-    ctx.drawImage(bmp, -box.x, -box.y);
-    bmp.close();
+    ctx.drawImage(src, -box.x, -box.y);
     return new Promise((resolve, reject) =>
       c.toBlob(
         (b) => (b?.type === MIME[format] ? resolve(b) : reject(new Error('浏览器不支持这个输出格式，请选择 PNG'))),
@@ -182,7 +319,7 @@ export default function Page() {
       )
     );
   }
-  const exportSig = `${maskSig}:${s.bg}:${s.color}:${s.trim}:${format}:${done.map((i) => i.id).join()}`;
+  const exportSig = `${maskSig}:${s.bg}:${s.color}:${s.trim}:${format}:${done.map((i) => `${i.id}.${i.rev}`).join()}`;
   const outputs = !busy && exported?.signature === exportSig ? exported.files : [];
   useEffect(() => {
     let off = false;
@@ -213,27 +350,101 @@ export default function Page() {
       if (!items.length || busy) return false;
       void process();
     },
-    save: download
+    save: download,
+    undo: () => travel('undo'),
+    redo: () => travel('redo')
   });
+  // 历史里的旧结果也占着地址，删图时一起还
+  function revoke(i: Item) {
+    URL.revokeObjectURL(i.url);
+    for (const x of [i, ...i.past, ...i.future]) if (x.cutUrl) URL.revokeObjectURL(x.cutUrl);
+    originals.current.delete(i.id);
+  }
   const remove = (id: string) => {
     const old = items.find((i) => i.id === id);
-    if (old) {
-      URL.revokeObjectURL(old.url);
-      if (old.cutUrl) URL.revokeObjectURL(old.cutUrl);
-    }
+    if (old) revoke(old);
     setItems((list) => list.filter((i) => i.id !== id));
   };
   const clearAll = () => {
-    items.forEach((i) => {
-      URL.revokeObjectURL(i.url);
-      if (i.cutUrl) URL.revokeObjectURL(i.cutUrl);
-    });
+    items.forEach(revoke);
     setItems([]);
     setSelected('');
   };
 
-  const showCut = view === 'cut' && item?.cutUrl;
-  const stageBg = showCut && s.bg !== 'none' ? (s.bg === 'white' ? '#ffffff' : s.color) : undefined;
+  // 框范围：框里拖是移动，拖角和边改大小，框外拖是重新画（和裁剪同一套手势）
+  const drag = useRef<{ kind: CropDrag; start: Rect; px: number; py: number; id: number } | null>(null);
+  const [dragged, setDragged] = useState<Rect | null>(null);
+  const shownRange = dragged ?? item?.range;
+  const toPercent = (e: PointerEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    return { px: ((e.clientX - rect.left) / rect.width) * 100, py: ((e.clientY - rect.top) / rect.height) * 100 };
+  };
+  // 修整：笔画边画边显示，松手才记进历史
+  const stroke = useRef<{ s: Stroke; id: number } | null>(null);
+  const ring = useRef<HTMLSpanElement>(null);
+  const toImage = (e: PointerEvent<HTMLDivElement>) => {
+    const c = canvas.current!;
+    const rect = c.getBoundingClientRect();
+    return [((e.clientX - rect.left) / rect.width) * c.width, ((e.clientY - rect.top) / rect.height) * c.height];
+  };
+  const moveRing = (e: PointerEvent<HTMLDivElement>) => {
+    const r = ring.current;
+    if (!r) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const d = (s.brush / 100) * Math.max(rect.width, rect.height);
+    r.style.cssText = `width:${d}px;height:${d}px;left:${e.clientX - rect.left - d / 2}px;top:${e.clientY - rect.top - d / 2}px;opacity:1`;
+  };
+  const onDown = (e: PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0 || !item || busy || !(mode === 'range' || (brushing && canvas.current))) return;
+    e.preventDefault();
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      /* 指针已经抬起时拿不到捕获，照样能拖 */
+    }
+    if (mode === 'range') {
+      const kind = ((e.target as HTMLElement).closest<HTMLElement>('[data-crop]')?.dataset.crop || 'draw') as CropDrag;
+      const { px, py } = toPercent(e);
+      drag.current = { kind, start: item.range ?? { x: 0, y: 0, w: 100, h: 100 }, px, py, id: e.pointerId };
+      return;
+    }
+    const { width, height } = item.size!;
+    const st: Stroke = { mode: mode as Stroke['mode'], size: (s.brush / 100) * Math.max(width, height), points: toImage(e) };
+    stroke.current = { s: st, id: e.pointerId };
+    paintStroke(canvas.current!.getContext('2d')!, ready.current, st);
+  };
+  const onMove = (e: PointerEvent<HTMLDivElement>) => {
+    if (brushing) moveRing(e);
+    const d = drag.current;
+    if (d?.id === e.pointerId) {
+      const { px, py } = toPercent(e);
+      // 轻轻一点不算，免得点一下就把框缩成一个小方块
+      if (d.kind === 'draw' && Math.hypot(px - d.px, py - d.py) < 1.5) return;
+      setDragged(dragCrop(d.start, d.kind, d.px, d.py, px - d.px, py - d.py));
+    }
+    const st = stroke.current;
+    if (st?.id === e.pointerId && canvas.current) {
+      const [x, y] = toImage(e);
+      const p = st.s.points;
+      if (Math.hypot(x - p[p.length - 2], y - p[p.length - 1]) < st.s.size * 0.1) return;
+      p.push(x, y);
+      paintStroke(canvas.current.getContext('2d')!, ready.current, st.s, p.length / 2 - 1);
+    }
+  };
+  const onUp = (e: PointerEvent<HTMLDivElement>) => {
+    if (drag.current?.id === e.pointerId) {
+      drag.current = null;
+      if (dragged && item) setRange(item.id, dragged);
+      setDragged(null);
+    }
+    const st = stroke.current;
+    if (st?.id === e.pointerId && item) {
+      stroke.current = null;
+      commit(item.id, (i) => ({ strokes: [...i.strokes, st.s] }));
+    }
+  };
+
+  const stageBg = mode === 'cut' && hasCut && s.bg !== 'none' ? (s.bg === 'white' ? '#ffffff' : s.color) : undefined;
 
   return (
     <ToolPage
@@ -253,14 +464,40 @@ export default function Page() {
         ) : (
           <section className="image-kit-stage">
             <div
-              className={'image-kit-preview cutout-preview' + (showCut && s.bg === 'none' ? '' : ' is-solid')}
+              className={
+                'image-kit-preview cutout-preview' +
+                (mode === 'cut' && s.bg === 'none' ? '' : ' is-solid') +
+                (mode === 'range' ? ' is-crop' : '') +
+                (dragged ? ' is-dragging' : '') +
+                (brushing ? ' is-brush' : '')
+              }
               style={stageBg ? { background: stageBg } : undefined}
+              onPointerDown={onDown}
+              onPointerMove={onMove}
+              onPointerUp={onUp}
+              onPointerCancel={onUp}
+              onPointerLeave={() => ring.current && (ring.current.style.opacity = '0')}
             >
-              <img
-                src={showCut ? item.cutUrl : item.url}
-                alt={item.file.name}
-                className={item.status === 'work' ? 'is-working' : undefined}
-              />
+              {showCanvas ? (
+                <>
+                  {brushing && <img className="cutout-under" src={item.url} alt="" />}
+                  <canvas ref={canvas} width={item.size!.width} height={item.size!.height} role="img" aria-label={item.file.name} />
+                  {brushing && <span ref={ring} className="cutout-ring" aria-hidden="true" />}
+                </>
+              ) : (
+                <img src={item.url} alt={item.file.name} className={item.status === 'work' ? 'is-working' : undefined} />
+              )}
+              {mode === 'range' && shownRange && (
+                <div
+                  className="image-kit-crop"
+                  data-crop="move"
+                  style={{ left: `${shownRange.x}%`, top: `${shownRange.y}%`, width: `${shownRange.w}%`, height: `${shownRange.h}%` }}
+                >
+                  {HANDLES.map((h) => (
+                    <span key={h} className={'image-kit-handle is-' + h} data-crop={h} aria-hidden="true" />
+                  ))}
+                </div>
+              )}
               {item.status === 'work' && (
                 <div className="cutout-busy" role="status">
                   <span className="cutout-scan" aria-hidden="true" />
@@ -271,21 +508,58 @@ export default function Page() {
                 </div>
               )}
             </div>
-            <div className="cutout-caption">
-              {item.cutUrl ? (
-                <Segmented
-                  className="seg-sm"
-                  label="预览"
-                  value={view}
-                  onChange={setView}
-                  options={[
-                    { value: 'cut', label: '抠图后' },
-                    { value: 'original', label: '原图' }
-                  ]}
-                />
-              ) : (
-                <p className="image-kit-caption">{item.status === 'error' ? item.error : '点“开始抠图”，结果会出现在这里'}</p>
+            {item.status === 'error' && <p className="image-kit-caption">{item.error}</p>}
+            <div className="cutout-tools">
+              <Segmented
+                className="seg-sm"
+                label="预览和修整"
+                value={mode}
+                onChange={setEditMode}
+                disabled={busy}
+                options={[
+                  ...(hasCut ? [{ value: 'cut' as EditMode, label: '结果' }] : []),
+                  { value: 'original', label: '原图' },
+                  { value: 'range', label: '范围' },
+                  ...(hasCut
+                    ? [
+                        { value: 'keep' as EditMode, label: '保留' },
+                        { value: 'erase' as EditMode, label: '擦除' }
+                      ]
+                    : [])
+                ]}
+              />
+              {brushing && (
+                <span className="cutout-brush">
+                  <Slider label="笔刷大小" min={1} max={20} value={s.brush} onChange={(brush) => update({ brush })} />
+                </span>
               )}
+              {mode === 'range' && item.range && (
+                <button type="button" className="btn-soft cutout-whole" disabled={busy} onClick={() => setRange(item.id, undefined)}>
+                  整张图
+                </button>
+              )}
+              <span className="cutout-history">
+                <button
+                  type="button"
+                  className="icon-btn"
+                  aria-label="撤回"
+                  title={`撤回 ${MOD}Z`}
+                  disabled={busy || !item.past.length}
+                  onClick={() => travel('undo')}
+                >
+                  <UndoIcon size={17} />
+                </button>
+                <button
+                  type="button"
+                  className="icon-btn"
+                  aria-label="重做"
+                  title={MOD === '⌘' ? '重做 ⇧⌘Z' : '重做 Ctrl Y'}
+                  disabled={busy || !item.future.length}
+                  onClick={() => travel('redo')}
+                >
+                  <RedoIcon size={17} />
+                </button>
+              </span>
             </div>
             {items.some((i) => i.animated) && (
               <p className="image-kit-warn" role="status">

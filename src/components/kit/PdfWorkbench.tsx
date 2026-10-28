@@ -325,7 +325,16 @@ export function PdfWorkbench({ mode }: { mode: PdfMode }) {
       setError(`打包失败：${(reason as Error).message}。少选几页再试。`);
     }
   }
+  const undo = () => {
+    setPages(history[history.length - 1]);
+    setHistory((old) => old.slice(0, -1));
+    setOutputs([]);
+  };
   useShortcuts({
+    undo: () => {
+      if (!editable || busyRef.current || !history.length) return false;
+      undo();
+    },
     run: () => {
       if (!pages.length || busyRef.current) return false;
       void run();
@@ -761,16 +770,7 @@ export function PdfWorkbench({ mode }: { mode: PdfMode }) {
             }
           >
             {editable && (
-              <button
-                type="button"
-                className="btn-soft"
-                disabled={busy || !history.length}
-                onClick={() => {
-                  setPages(history[history.length - 1]);
-                  setHistory((old) => old.slice(0, -1));
-                  setOutputs([]);
-                }}
-              >
+              <button type="button" className="btn-soft" disabled={busy || !history.length} onClick={undo}>
                 撤销
               </button>
             )}

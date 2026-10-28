@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyMask, bounds, MODELS, toMask, toTensor } from './logic';
+import { applyMask, bounds, dabs, MODELS, toMask, toPixels, toTensor } from './logic';
 
 it('抠图保留原图透明度，并与模型遮罩相乘', () => {
   const pixels = new Uint8ClampedArray([0, 0, 0, 0, 255, 0, 0, 128, 0, 255, 0, 255]);
@@ -44,5 +44,27 @@ describe('bounds', () => {
   });
   it('全透明时返回 null', () => {
     expect(bounds(() => 0, 3, 3)).toBeNull();
+  });
+});
+
+describe('toPixels', () => {
+  it('百分比范围换成像素，不出界', () => {
+    expect(toPixels({ x: 25, y: 10, w: 50, h: 80 }, 200, 100)).toEqual({ x: 50, y: 10, w: 100, h: 80 });
+    expect(toPixels({ x: 99.9, y: 99.9, w: 5, h: 5 }, 100, 100)).toEqual({ x: 99, y: 99, w: 1, h: 1 });
+  });
+});
+
+describe('dabs', () => {
+  it('一个点就是一个圆点', () => {
+    expect(dabs([5, 5], 4)).toEqual([5, 5]);
+  });
+  it('两点之间补齐，间隔不超过半径的 0.4', () => {
+    const d = dabs([0, 0, 10, 0], 5);
+    expect(d.slice(0, 2)).toEqual([0, 0]);
+    expect(d.slice(-2)).toEqual([10, 0]);
+    for (let i = 2; i < d.length; i += 2) expect(d[i] - d[i - 2]).toBeLessThanOrEqual(2);
+  });
+  it('从中间开始只给新的一段', () => {
+    expect(dabs([0, 0, 0, 1, 0, 3], 10, 2)).toEqual([0, 3]);
   });
 });

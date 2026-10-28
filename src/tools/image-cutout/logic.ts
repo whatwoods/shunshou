@@ -64,3 +64,35 @@ export function bounds(alpha: (i: number) => number, width: number, height: numb
   }
   return x1 < 0 ? null : { x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 };
 }
+
+// 抠图范围：占图片宽高的百分比（和裁剪框同一套坐标），换成像素，至少 1 像素、不出界
+export type Rect = { x: number; y: number; w: number; h: number };
+export function toPixels(r: Rect, width: number, height: number) {
+  const x = Math.min(width - 1, Math.max(0, Math.round((r.x / 100) * width)));
+  const y = Math.min(height - 1, Math.max(0, Math.round((r.y / 100) * height)));
+  const w = Math.max(1, Math.min(width - x, Math.round((r.w / 100) * width)));
+  const h = Math.max(1, Math.min(height - y, Math.round((r.h / 100) * height)));
+  return { x, y, w, h };
+}
+
+// 修整的一笔：保留（从原图补回来）或擦除。points 是 x0, y0, x1, y1… 抠图结果上的像素坐标，size 是笔刷直径
+export type Stroke = { mode: 'keep' | 'erase'; size: number; points: number[] };
+
+// 笔画铺成一串圆点（间隔不到半径的一半，连起来看不出接缝）。from：从第几个点开始，画到一半时只补新的那一段
+export function dabs(points: number[], radius: number, from = 0): number[] {
+  const out: number[] = [];
+  const step = Math.max(0.5, radius * 0.4);
+  for (let i = Math.max(0, from); i < points.length / 2; i++) {
+    const x = points[2 * i],
+      y = points[2 * i + 1];
+    if (i === 0) {
+      out.push(x, y);
+      continue;
+    }
+    const px = points[2 * i - 2],
+      py = points[2 * i - 1];
+    const n = Math.max(1, Math.ceil(Math.hypot(x - px, y - py) / step));
+    for (let k = 1; k <= n; k++) out.push(px + ((x - px) * k) / n, py + ((y - py) * k) / n);
+  }
+  return out;
+}

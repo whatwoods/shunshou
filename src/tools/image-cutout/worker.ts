@@ -14,13 +14,14 @@ import partB from './models/isnet-part-b.bin?url';
 import partC from './models/isnet-part-c.bin?url';
 import partD from './models/isnet-part-d.bin?url';
 import { decode } from '../../lib/image/decode';
-import { applyMask, bounds, MODELS, toMask, toTensor, type ModelId } from './logic';
+import { applyMask, bounds, MODELS, toMask, toPixels, toTensor, type ModelId, type Rect } from './logic';
 
 const FILES: Record<ModelId, string[]> = { fast: [fastUrl], fine: [partA, partB, partC, partD] };
 // 输出图最长边：再大的照片也先缩到这里，免得内存吃紧
 const MAX_SIDE = 6000;
 
-type Job = { id: string; file: File; model: ModelId; clean: boolean };
+// range：只在这个范围里找主体（模型看的是这一块，范围外一律透明）
+type Job = { id: string; file: File; model: ModelId; clean: boolean; range?: Rect };
 type Runtime = { ort: typeof Ort; session: Ort.InferenceSession };
 const sessions = new Map<ModelId, Promise<Runtime>>();
 
@@ -97,7 +98,7 @@ function session(model: ModelId, id: string) {
   return s;
 }
 
-async function run({ id, file, model, clean }: Job) {
+async function run({ id, file, model, clean, range }: Job) {
   const { ort, session: s } = await session(model, id);
   self.postMessage({ id, stage: 'infer', backend: s ? (ort.env.wasm.wasmBinary ? 'gpu' : 'cpu') : '' });
   const src = await decode(file);
@@ -105,11 +106,13 @@ async function run({ id, file, model, clean }: Job) {
   const width = Math.max(1, Math.round(src.width * scale)),
     height = Math.max(1, Math.round(src.height * scale));
 
-  // 1. 缩到模型的输入尺寸
+  // 1. 缩到模型的输入尺寸（选了范围就只取这一块）
   const { size, mean, std } = MODELS[model];
+  const area = range ? toPixels(range, width, height) : { x: 0, y: 0, w: width, h: height };
+  const k = src.width / width;
   const small = new OffscreenCanvas(size, size);
   const sc = small.getContext('2d', { willReadFrequently: true })!;
-  sc.drawImage(src, 0, 0, size, size);
+  sc.drawImage(src, area.x * k, area.y * k, area.w * k, area.h * k, 0, 0, size, size);
   const input = toTensor(sc.getImageData(0, 0, size, size).data, size, mean, std);
   const out = await s.run({ [s.inputNames[0]]: new ort.Tensor('float32', input, [1, 3, size, size]) });
   const pred = out[s.outputNames[0]].data as Float32Array;
@@ -125,7 +128,7 @@ async function run({ id, file, model, clean }: Job) {
   const big = new OffscreenCanvas(width, height);
   const bc = big.getContext('2d', { willReadFrequently: true })!;
   bc.imageSmoothingQuality = 'high';
-  bc.drawImage(small, 0, 0, width, height);
+  bc.drawImage(small, area.x, area.y, area.w, area.h);
   const alpha = bc.getImageData(0, 0, width, height).data;
 
   // 3. 原图套上遮罩
