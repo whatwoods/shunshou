@@ -3,6 +3,8 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "shunshou",
   "compatibility_date": "2026-10-01",
+  // wrangler deploy / dev 之前先构建，Cloudflare 连 Git 自动部署时只跑 wrangler deploy 也能拿到 dist/
+  "build": { "command": "npm run build" },
   "assets": {
     "directory": "./dist",
     // 构建时为每个公开路由输出 HTML；未知地址返回真正的 404
